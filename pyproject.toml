@@ -1,0 +1,16 @@
+[tool.poetry]
+name = "read-rapidpe"
+version = "0.1.0"
+description = ""
+authors = ["Cory Chu <cory@gwlab.page>"]
+readme = "README.md"
+packages = [{include = "read_rapidpe"}]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+python-ligo-lw = "^1.8.3"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
