@@ -9,7 +9,7 @@ class RapidPE_XML:
     Attributes
     ----------
     xmldoc : ligo.lw.ligolw.Document
-        The opend ligolw xml file
+        The opened ligolw xml file
 
     intrinsic_table : dict
         Intrinsic parameters get from "sngl_inspiral:table"
