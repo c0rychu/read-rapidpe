@@ -84,11 +84,12 @@ class RapidPE_XML:
         # Provide canonical interface with two attributes
         #   self.intrinsic_table
         #   self.extrinsic_table
+        # =============================================
         # TODO: Check the naming convention in bilby and PESummary
         #       [bilby]    https://arxiv.org/pdf/2006.00714.pdf
         #       [PESummary]https://docs.ligo.org/lscsoft/pesummary/stable_docs/gw/parameters.html
-        #       spin1z = chi_1(bilby) = spin_1_z(bilby) = spin_1z(PESummary)?
-        #       spin2z = chi_2(bilby) = spin_2_z(bilby) = spin_2z(PESummary)?
+        #       spin1z = spin_1z(PESummary)? (maybe = chi_1x= spin_1_z (bilby))
+        #       spin2z = spin_2z(PESummary)? (maybe = chi_2 = spin_2_z (bilby))
         #       distance = luminosity_distance?
         #       latitude = dec ?
         #       longitude = ra ?
@@ -96,6 +97,9 @@ class RapidPE_XML:
         #       polarization = psi?
         #       sampling_function is
         #       the p_s in Eq. 28 of https://arxiv.org/pdf/1502.04370.pdf
+        # =============================================
+
+        # Maps are "rapidpe_name": "canonical_name"
         intrinsic_parameter_map = {
                                     "mass1": "mass_1",
                                     "mass2": "mass_2",
