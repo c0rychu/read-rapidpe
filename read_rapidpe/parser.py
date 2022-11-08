@@ -1,3 +1,8 @@
+"""
+Parse the RapidPE results
+Author: Cory Chu <cory@gwlab.page>
+"""
+
 from ligo.lw import utils, lsctables, ligolw
 
 
@@ -13,12 +18,32 @@ class RapidPE_XML:
     intrinsic_table : dict
         Intrinsic parameters get from "sngl_inspiral:table"
         with canonical parameter names.
+
         An example:
         {
             "mass_1": [1.4],
             "mass_2": [2.8],
             ...
         }
+
+        Parameters:
+        mass_i:
+            component masses (in solar mass?)
+
+        spin_iz:
+            z-component of spin (what coordinate?)
+
+        marg_log_likelihood:
+            natural log of the likelihood
+            marginalized over extrinsic parameters
+
+        tau0, tau3:
+            chirptime parameters
+            It's a kind of mass parameter
+            like (m1, m2) or (chirp_mass, mass_ratio)
+            See Appendix B of https://arxiv.org/pdf/0706.4437.pdf
+
+
 
     extrinsic_table : dict
         Extrinsic parameters get from "sim_inspiral:table"

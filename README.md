@@ -14,7 +14,7 @@ pip install -e .
 
 ## Plot m1-m2
 ```python
-from read_rapidpe.parser import RapidPE_XML 
+from read_rapidpe import RapidPE_XML 
 import matplotlib.pyplot as plt
 import glob
 
@@ -27,7 +27,7 @@ for file in glob.glob(results_dir+"*0.xml.gz"):
     grid_point = RapidPE_XML(file)
     mass_1.append(grid_point.intrinsic_table["mass_1"][0])
     mass_2.append(grid_point.intrinsic_table["mass_2"][0])
-    marg_log_likelihood.append(grid_point.intrinsic_table["marg_ln_likelihood"][0])
+    marg_log_likelihood.append(grid_point.intrinsic_table["marg_log_likelihood"][0])
 
 # Plot marginalized-log-likelihood over intrinsic parameter (mass_1/mass_2) grid points
 plt.scatter(mass_1, mass_2, c=marg_log_likelihood )
