@@ -76,7 +76,8 @@ class RapidPE_XML:
                 lsctables.SimInspiralTable
                 )
         except ValueError:
-            # if not *samples.xml.gz, there is no "sim_inspiral:table"
+            # if not *samples.xml.gz or new version xml,
+            # there is no "sim_inspiral:table"
             self.extrinsic_table_raw = {}
             pass
 
@@ -86,49 +87,52 @@ class RapidPE_XML:
         # TODO: Check the naming convention in bilby and PESummary
         #       [bilby]    https://arxiv.org/pdf/2006.00714.pdf
         #       [PESummary]https://docs.ligo.org/lscsoft/pesummary/stable_docs/gw/parameters.html
+        #       spin1z = chi_1(bilby) = spin_1_z(bilby) = spin_1z(PESummary)?
+        #       spin2z = chi_2(bilby) = spin_2_z(bilby) = spin_2z(PESummary)?
+        #       distance = luminosity_distance?
+        #       latitude = dec ?
+        #       longitude = ra ?
+        #       inclination = theta_jn ?
+        #       polarization = psi?
+        #       sampling_function is
+        #       the p_s in Eq. 28 of https://arxiv.org/pdf/1502.04370.pdf
+        intrinsic_parameter_map = {
+                                    "mass1": "mass_1",
+                                    "mass2": "mass_2",
+                                    "spin1z": "spin_1z",
+                                    "spin2z": "spin_2z",
+                                    "snr": "marg_log_likelihood",
+                                    "tau0": "tau0",
+                                    "tau3": "tau3",
+                                    "alpha4": "eccentricity",
+                                }
         self.intrinsic_table = {}
-        try:
-            self.intrinsic_table = {
-                "mass_1": self.intrinsic_table_raw["mass1"],
-                "mass_2": self.intrinsic_table_raw["mass2"],
-                "marg_log_likelihood": self.intrinsic_table_raw["snr"],
-                "spin_1z": self.intrinsic_table_raw["spin1z"],
-                # spin1z = chi_1(bilby) = spin_1_z(bilby) = spin_1z(PESummary)?
-                "spin_2z": self.intrinsic_table_raw["spin2z"],
-                # spin2z = chi_2(bilby) = spin_2_z(bilby) = spin_2z(PESummary)?
-                "tau0": self.intrinsic_table_raw["tau0"],
-                "tau3": self.intrinsic_table_raw["tau3"],
-                # (tau0, tau3) are called chirptime parameters
-                # It's a kind of mass parameter
-                # like (m1, m2) or (chirp_mass, mass_ratio)
-                # See Appendix B of https://arxiv.org/pdf/0706.4437.pdf
-            }
-        except KeyError:
-            pass
+        for key in intrinsic_parameter_map:
+            try:
+                self.intrinsic_table[intrinsic_parameter_map[key]] \
+                    = self.intrinsic_table_raw[key]
+            except KeyError:
+                pass
 
+        extrinsic_parameter_map = {
+                                    "mass1": "mass_1",
+                                    "mass2": "mass_2",
+                                    "distance": "luminosity_distance",
+                                    "latitude": "latitude",
+                                    "longitude": "longitude",
+                                    "inclination": "theta_jn",
+                                    "polarization": "psi",
+                                    "alpha1": "log_likelihood",
+                                    "alpha2": "prior",
+                                    "alpha3": "sampling_function",
+                                }
         self.extrinsic_table = {}
-        try:
-            self.extrinsic_table = {
-                "mass_1": self.extrinsic_table_raw["mass1"],
-                "mass_2": self.extrinsic_table_raw["mass2"],
-                "luminosity_distance": self.extrinsic_table_raw["distance"],
-                # distance = luminosity_distance?
-                "latitude": self.extrinsic_table_raw["latitude"],
-                # latitude = dec ?
-                "longitude": self.extrinsic_table_raw["longitude"],
-                # longitude = ra ?
-                "theta_jn": self.extrinsic_table_raw["inclination"],
-                # inclination = theta_jn ?
-                "psi": self.extrinsic_table_raw["polarization"],
-                # polarization = psi?
-                "log_likelihood": self.extrinsic_table_raw["alpha1"],
-                "prior": self.extrinsic_table_raw["alpha2"],
-                "sampling_function": self.extrinsic_table_raw["alpha3"],
-                # sampling_function is
-                # the p_s in Eq. 28 of https://arxiv.org/pdf/1502.04370.pdf
-                }
-        except KeyError:
-            pass
+        for key in extrinsic_parameter_map:
+            try:
+                self.extrinsic_table[extrinsic_parameter_map[key]] \
+                    = self.extrinsic_table_raw[key]
+            except KeyError:
+                pass
 
     def _open_ligolw(self, xmlfile: str):
         xmldoc = utils.load_filename(
