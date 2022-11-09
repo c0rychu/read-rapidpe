@@ -258,9 +258,10 @@ class RapidPE_XML_fast:
                 for i in inspiral_table.iter("Column")]
 
         # Clean up string
+        # TODO: Check reliablity! This is a dirty way to clean up the ligolwXML
         s = inspiral_table.find("Stream").text
         s = s.replace("\t", "")
-        s = s[1:]
+        s = s[1:]  # Remove the extra "\n" in the begining of Stream string
 
         # Combine key-value
         return self._append_rows(keys, s)
