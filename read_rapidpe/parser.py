@@ -3,8 +3,10 @@ Parse the RapidPE results
 Author: Cory Chu <cory@gwlab.page>
 """
 
+# For RapidPE_XML
 from ligo.lw import utils, lsctables, ligolw
 
+# For RapidPE_XML_fast
 import xml.etree.ElementTree as ET
 import gzip
 
