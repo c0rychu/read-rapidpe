@@ -67,7 +67,7 @@ class RapidPE_XML:
 
         # Extract XML, assign to "raw" attributes
         # "sngl_inspiral:table" -> self.intrinsic_table_raw
-        # ""sim_inspiral:table" -> self.extrinsic_table_raw
+        # "sim_inspiral:table" -> self.extrinsic_table_raw
         self.intrinsic_table_raw = self._get_ligolw_table(
             lsctables.SnglInspiralTable
             )
