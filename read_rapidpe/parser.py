@@ -101,7 +101,7 @@ class RapidPE_XML:
         #       inclination = theta_jn ?
         #       polarization = psi?
         #       sampling_function is
-        #       the p_s in Eq. 28 of https://arxiv.org/pdf/1502.04370.pdf
+        #         the p_s in Eq. 28 of https://arxiv.org/pdf/1502.04370.pdf
         # =============================================
 
         # Maps are "rapidpe_name": "canonical_name"
