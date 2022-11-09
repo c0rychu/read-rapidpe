@@ -237,6 +237,9 @@ class RapidPE_XML_fast:
         result = {key: [] for key in keys}
         for row in rows.splitlines():
             row = row.split(',')
+            # For some reason, some table have extra trailing ","
+            # That makes an extra empty column in each row
+            # So, we only keep first len(keys) columns
             row = row[0:len(keys)]
             values = [float(x) for x in row]
             for i, key in enumerate(keys):
