@@ -242,9 +242,8 @@ class RapidPE_XML_fast:
             # That makes an extra empty column in each row
             # So, we only keep first len(keys) columns
             row = row[0:len(keys)]
-            values = [float(x) for x in row]
             for i, key in enumerate(keys):
-                result[key].append(values[i])
+                result[key].append(float(row[i]))
         return result
 
     def _get_ligolw_table(
