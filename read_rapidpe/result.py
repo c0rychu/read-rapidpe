@@ -12,8 +12,44 @@ from matplotlib.tri import LinearTriInterpolator, CubicTriInterpolator
 
 class RapidPE_result:
     """
-    RapidPE result
+    RapidPE Result
+
+    It can be created from a list of *.xml.gz files using
+        RapidPE_result.from_xml_array()
+
+    Example:
+    import glob
+    results_dir = "path/to/results"
+    result_xml_files = glob.glob(results_dir+"*.xml.gz")
+    result = RapidPE_result.from_xml_array(result_xml_files)
+
     ...
+
+    Attributes
+    ----------
+    grid_points : [RapidPE_grid_point]
+        list of all grid points data
+
+    mass_i : numpy.ndarray
+        array of mass_i over grid points
+
+    spin_iz : numpy.ndarray
+        array of spin_iz over grid points
+
+    ...
+
+    Methods
+    -------
+    from_xml_array([a.xml.gz, b.xml.gz, ...]):
+        Get result from xml.gz files
+
+    do_interpolate_marg_log_likelihood_m1m2(method="cubic"):
+        Perfom interpolation of marg_log_likelihood
+        After executing, a new method log_likelihood(m1, m2)
+        will be created.
+
+    log_likelihood(m1, m2):
+        Interpolated log_likelihood
 
     """
 
@@ -46,6 +82,15 @@ class RapidPE_result:
 
     @classmethod
     def from_xml_array(cls, xml_array):
+        """
+        Get result from xml.gz files
+
+        Example:
+            import glob
+            results_dir = "path/to/results"
+            result_xml_files = glob.glob(results_dir+"*.xml.gz")
+            result = RapidPE_result.from_xml_array(result_xml_files)
+        """
         result = cls()
         N = len(xml_array)
         # Get keys from the 1st xml file's intrinsic_table
@@ -78,6 +123,18 @@ class RapidPE_result:
         return cls(result)
 
     def do_interpolate_marg_log_likelihood_m1m2(self, method="cubic"):
+        """
+        Perfom triangular interpolation of marg_log_likelihood in
+        chirp_mass (M_c), symmetric_mass_ratio (eta) space.
+        After executing, a new method log_likelihood(m1, m2)
+        will be created.
+
+        Parameters
+        ----------
+            method: str
+                currently, we support "cubic" or "linear"
+
+        """
         triangles = Triangulation(self.chirp_mass, self.symmetric_mass_ratio)
 
         if method == "cubic":
