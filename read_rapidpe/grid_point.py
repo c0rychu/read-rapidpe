@@ -2,7 +2,6 @@
 Author: Cory Chu <cory@gwlab.page>
 """
 
-# For RapidPE_XML_fast
 import xml.etree.ElementTree as ET
 import gzip
 

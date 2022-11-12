@@ -165,7 +165,7 @@ telegram = ["requests"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.10"
-content-hash = "bb32d9c6789976ea391aea3b3b0c99219cee101d388723748d70cedd5d592f08"
+content-hash = "dedb6a5e6c83d98780a34bd0a8ea090d85a85f33b9129923c8ffcaf7b61f3858"
 
 [metadata.files]
 cffi = [
