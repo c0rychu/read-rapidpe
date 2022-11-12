@@ -15,13 +15,8 @@ class RapidPE_result:
     RapidPE Result
 
     It can be created from a list of *.xml.gz files using
-        RapidPE_result.from_xml_array()
-
-    Example:
-    import glob
-    results_dir = "path/to/results"
-    result_xml_files = glob.glob(results_dir+"*.xml.gz")
-    result = RapidPE_result.from_xml_array(result_xml_files)
+        RapidPE_result.from_xml_array([a.xml.gz, b.xml.gz, ...])
+    Check help(RapidPE_result.from_xml_array) for an example.
 
     ...
 
@@ -36,7 +31,7 @@ class RapidPE_result:
     spin_iz : numpy.ndarray
         array of spin_iz over grid points
 
-    ...
+    Similar cases for chirp_mass, symmetric_mass_ratio, ...
 
     Methods
     -------
