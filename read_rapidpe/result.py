@@ -6,6 +6,9 @@ import numpy as np
 from .grid_point import RapidPE_grid_point
 from .transform import transform_m1m2_to_mceta
 
+from matplotlib.tri import Triangulation
+from matplotlib.tri import LinearTriInterpolator, CubicTriInterpolator
+
 
 class RapidPE_result:
     """
@@ -73,3 +76,22 @@ class RapidPE_result:
             result._keys.extend(["chirp_mass", "symmetric_mass_ratio"])
 
         return cls(result)
+
+    def do_interpolate_marg_log_likelihood_m1m2(self, method="cubic"):
+        triangles = Triangulation(self.chirp_mass, self.symmetric_mass_ratio)
+
+        if method == "cubic":
+            f = CubicTriInterpolator(triangles, self.marg_log_likelihood)
+        elif method == "linear":
+            f = LinearTriInterpolator(triangles, self.marg_log_likelihood)
+        else:
+            raise ValueError("method= 'cubic' or 'linear'")
+
+        def log_likelihood(m1, m2):
+            mc, eta = transform_m1m2_to_mceta(m1, m2)
+            ll = f(mc, eta)
+            ll = np.ma.fix_invalid(ll, fill_value=-100).data
+            # FIXME: is -100 okay?
+            return ll
+
+        self.log_likelihood = log_likelihood
