@@ -137,6 +137,7 @@ class RapidPE_result:
         elif method == "linear":
             f = LinearTriInterpolator(triangles, self.marg_log_likelihood)
         elif method == "gaussian":
+            # TODO: Implement gaussian interpolation
             raise NotImplementedError(
                 "Gaussian interpolation is not supported yet!"
                 )
