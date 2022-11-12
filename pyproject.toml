@@ -10,6 +10,7 @@ packages = [{include = "read_rapidpe"}]
 python = "^3.10"
 python-ligo-lw = "^1.8.3"
 numpy = "^1.23.4"
+matplotlib = "^3.6.2"
 
 
 [build-system]
