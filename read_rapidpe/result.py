@@ -73,7 +73,7 @@ class RapidPE_result:
         return RapidPE_result(self)
 
     def copy(self):
-        self.__copy__()
+        return self.__copy__()
 
     @classmethod
     def from_xml_array(cls, xml_array):
