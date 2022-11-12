@@ -48,11 +48,11 @@ def lalsimutils_Mceta(m1, m2):
 m1m2 = np.vectorize(lalsimutils_m1m2)
 
 
-def transform_m1m2_mceta(m1, m2):
+def transform_m1m2_to_mceta(m1, m2):
     return lalsimutils_Mceta(m1, m2)
 
 
-def transform_mceta_m1m2(mc, eta):
+def transform_mceta_to_m1m2(mc, eta):
     return m1m2(mc, eta)
 
 

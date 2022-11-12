@@ -2,8 +2,9 @@
 Author: Cory Chu <cory@gwlab.page>
 """
 
-from .grid_point import RapidPE_grid_point
 import numpy as np
+from .grid_point import RapidPE_grid_point
+from .transform import transform_m1m2_to_mceta
 
 
 class RapidPE_result:
@@ -47,6 +48,7 @@ class RapidPE_result:
         # Get keys from the 1st xml file's intrinsic_table
         result._keys = \
             RapidPE_grid_point.from_xml(xml_array[0]).intrinsic_table.keys()
+        result._keys = list(result._keys)
 
         for attr in result._keys:
             setattr(result, attr, np.zeros(N))
@@ -64,4 +66,10 @@ class RapidPE_result:
                         grid_point.intrinsic_table[attr][0]
                 except KeyError:
                     pass
+
+        if ("mass_1" in result._keys) and ("mass_2" in result._keys):
+            result.chirp_mass, result.symmetric_mass_ratio = \
+                transform_m1m2_to_mceta(result.mass_1, result.mass_2)
+            result._keys.extend(["chirp_mass", "symmetric_mass_ratio"])
+
         return cls(result)
