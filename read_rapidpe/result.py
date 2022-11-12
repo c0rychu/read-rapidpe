@@ -53,7 +53,11 @@ class RapidPE_result:
 
         for i, filename in enumerate(xml_array):
             grid_point = RapidPE_grid_point.from_xml(filename)
+
+            # Append grid-points
             result.grid_points.append(grid_point)
+
+            # Append Intrinsic Parameters of grid-points
             for attr in result._keys:
                 try:
                     getattr(result, attr)[i] = \
