@@ -10,6 +10,21 @@ from matplotlib.tri import Triangulation
 from matplotlib.tri import LinearTriInterpolator, CubicTriInterpolator
 
 
+def unique_with_tolerance(array, tolerance):
+    tolerance = np.abs(tolerance)
+    sorted_array = np.sort(array)
+    diff = np.diff(sorted_array)
+    mask = np.append(True, np.where(diff < tolerance, False, True))
+    return sorted_array[mask]
+
+
+def grid_separation_min(array):
+    tolerance = (array.max() - array.min()) / np.sqrt(len(array)) / 200
+    # FIXME: is 200 okay?
+    x = unique_with_tolerance(array, tolerance=tolerance)
+    return np.diff(x).min()
+
+
 class RapidPE_result:
     """
     RapidPE Result
@@ -130,25 +145,44 @@ class RapidPE_result:
                 currently, we support "cubic" or "linear"
 
         """
-        triangles = Triangulation(self.chirp_mass, self.symmetric_mass_ratio)
+        if method == "gaussian":
+            def gaussian_log_likelihood(m1, m2):
+                result = self
+                mc_arr, eta_arr = transform_m1m2_to_mceta(m1, m2)
+                sigma_mc = grid_separation_min(result.chirp_mass)/2
+                sigma_eta = grid_separation_min(result.symmetric_mass_ratio)/2
 
-        if method == "cubic":
-            f = CubicTriInterpolator(triangles, self.marg_log_likelihood)
-        elif method == "linear":
-            f = LinearTriInterpolator(triangles, self.marg_log_likelihood)
-        elif method == "gaussian":
-            # TODO: Implement gaussian interpolation
-            raise NotImplementedError(
-                "Gaussian interpolation is not supported yet!"
-                )
+                likelihood = np.zeros_like(mc_arr)
+                for i in range(len(result.chirp_mass)):
+                    likelihood += \
+                        np.exp(result.marg_log_likelihood[i]) * \
+                        np.exp(
+                            (-0.5/sigma_mc**2
+                             * (mc_arr - result.chirp_mass[i])**2) +
+                            (-0.5/sigma_eta**2 
+                             * (eta_arr - result.symmetric_mass_ratio[i])**2)
+                        )
+                # print(sigma_eta, sigma_mc)
+                return np.log(likelihood)
+
+            self.log_likelihood = gaussian_log_likelihood
+
         else:
-            raise ValueError("method= 'cubic' or 'linear'")
+            triangles = Triangulation(self.chirp_mass,
+                                      self.symmetric_mass_ratio)
 
-        def log_likelihood(m1, m2):
-            mc, eta = transform_m1m2_to_mceta(m1, m2)
-            ll = f(mc, eta)
-            ll = np.ma.fix_invalid(ll, fill_value=-100).data
-            # FIXME: is -100 okay?
-            return ll
+            if method == "cubic":
+                f = CubicTriInterpolator(triangles, self.marg_log_likelihood)
+            elif method == "linear":
+                f = LinearTriInterpolator(triangles, self.marg_log_likelihood)
+            else:
+                raise ValueError("method= 'cubic', 'linear', or 'gaussian'")
 
-        self.log_likelihood = log_likelihood
+            def log_likelihood(m1, m2):
+                mc, eta = transform_m1m2_to_mceta(m1, m2)
+                ll = f(mc, eta)
+                ll = np.ma.fix_invalid(ll, fill_value=-100).data
+                # FIXME: is -100 okay?
+                return ll
+
+            self.log_likelihood = log_likelihood
