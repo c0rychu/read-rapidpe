@@ -4,6 +4,7 @@ Author: Cory Chu <cory@gwlab.page>
 
 import xml.etree.ElementTree as ET
 import gzip
+import numpy as np
 
 
 class RapidPE_grid_point:
@@ -70,7 +71,7 @@ class RapidPE_grid_point:
                 pass
 
     @classmethod
-    def from_xml(cls, filename: str):
+    def from_xml(cls, filename: str, use_numpy=True):
         """
         Extract XML, assign to "raw" attributes
         "sngl_inspiral:table" -> self.intrinsic_table_raw
@@ -82,11 +83,13 @@ class RapidPE_grid_point:
         grid_point = cls()
         grid_point.intrinsic_table_raw = cls._get_ligolw_table(
             input_xml_gz,
-            tablename="sngl_inspiral:table"
+            tablename="sngl_inspiral:table",
+            use_numpy=use_numpy
             )
         grid_point.extrinsic_table_raw = cls._get_ligolw_table(
             input_xml_gz,
-            tablename="sim_inspiral:table"
+            tablename="sim_inspiral:table",
+            use_numpy=use_numpy
             )
         return cls(grid_point)
 
@@ -115,10 +118,26 @@ class RapidPE_grid_point:
         return result
 
     @classmethod
+    def _append_rows_numpy(cls, keys, rows):
+        rows = rows.splitlines()
+        N = len(rows)
+        result = {key: np.zeros(N) for key in keys}
+        for row_idx, row in enumerate(rows):
+            row = row.split(',')
+            # For some reason, some table have extra trailing ","
+            # That makes an extra empty column in each row
+            # So, we only keep first len(keys) columns
+            row = row[0:len(keys)]
+            for i, key in enumerate(keys):
+                result[key][row_idx] = float(row[i])
+        return result
+
+    @classmethod
     def _get_ligolw_table(
             cls,
             input_xml_gz,
-            tablename="sngl_inspiral:table"
+            tablename="sngl_inspiral:table",
+            use_numpy=True
             ):
 
         # Get XML root
@@ -139,4 +158,7 @@ class RapidPE_grid_point:
             s = s[1:]  # Remove the extra "\n" in the begining of Stream string
 
         # Combine key-value
-        return cls._append_rows(keys, s)
+        if use_numpy:
+            return cls._append_rows_numpy(keys, s)
+        else:
+            return cls._append_rows(keys, s)
