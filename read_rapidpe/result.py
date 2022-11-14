@@ -8,6 +8,7 @@ from .transform import transform_m1m2_to_mceta
 
 from matplotlib.tri import Triangulation
 from matplotlib.tri import LinearTriInterpolator, CubicTriInterpolator
+from scipy.interpolate import LinearNDInterpolator
 
 
 def unique_with_tolerance(array, tolerance):
@@ -172,6 +173,22 @@ class RapidPE_result:
                 return np.log(likelihood)
 
             self.log_likelihood = gaussian_log_likelihood
+        elif method == "linear-scipy":
+
+            f = LinearNDInterpolator(
+                list(zip(self.chirp_mass, self.symmetric_mass_ratio)),
+                self.marg_log_likelihood,
+                fill_value=-100  # FIXME: is -100 okay?
+                )
+
+            def log_likelihood(m1, m2):
+                mc, eta = transform_m1m2_to_mceta(m1, m2)
+                ll = f(mc, eta)
+                # ll = np.ma.fix_invalid(ll, fill_value=-100).data
+                # FIXME: is -100 okay?
+                return ll
+
+            self.log_likelihood = log_likelihood
 
         else:
             triangles = Triangulation(self.chirp_mass,
