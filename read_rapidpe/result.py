@@ -192,3 +192,9 @@ class RapidPE_result:
                 return ll
 
             self.log_likelihood = log_likelihood
+
+    def do_interpolate_marg_log_likelihood_mass_spin():
+        # TODO: do 4-D interpolation using
+        #       scipy.interpolate.LinearNDInterpolator
+        #       Ref:https://docs.scipy.org/doc/scipy/reference/generated/scipy.interpolate.LinearNDInterpolator.html
+        raise NotImplementedError("to be support in the future")
