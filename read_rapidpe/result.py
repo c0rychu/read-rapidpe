@@ -22,6 +22,7 @@ def unique_with_tolerance(array, tolerance):
 def grid_separation_min(array):
     tolerance = (array.max() - array.min()) / np.sqrt(len(array)) / 200
     # FIXME: is 200 okay?
+    # FIXME: is np.sqrt(len(array)) okay?
     x = unique_with_tolerance(array, tolerance=tolerance)
     return np.diff(x).min()
 
@@ -147,7 +148,12 @@ class RapidPE_result:
         Parameters
         ----------
             method: str
-                currently, we support "cubic" or "linear"
+                currently, we support "cubic", "linear",
+                "linear-scipy", and "gaussian".
+
+            gaussian_sigma_to_grid_size_ratio=0.5: float
+                if using method="gaussian", we can change the
+                sigma of gaussian with respect to grid size
 
         """
         if method == "gaussian":
