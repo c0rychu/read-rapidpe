@@ -1,4 +1,5 @@
 """
+Read single grid point output from RapidPE output.
 Author: Cory Chu <cory@gwlab.page>
 """
 

@@ -1,4 +1,5 @@
 """
+Read and parse RapidPE output result for post-processing.
 Author: Cory Chu <cory@gwlab.page>
 """
 
