@@ -165,7 +165,7 @@ class RapidPE_result:
                         np.exp(
                             (-0.5/sigma_mc**2
                              * (mc_arr - result.chirp_mass[i])**2) +
-                            (-0.5/sigma_eta**2 
+                            (-0.5/sigma_eta**2
                              * (eta_arr - result.symmetric_mass_ratio[i])**2)
                         )
                 # print(sigma_eta, sigma_mc)
