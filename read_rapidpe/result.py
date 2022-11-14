@@ -205,9 +205,12 @@ class RapidPE_result:
             elif method == "linear":
                 f = LinearTriInterpolator(triangles, self.marg_log_likelihood)
             else:
-                raise ValueError("method= 'cubic', 'linear', or 'gaussian'")
+                raise ValueError(
+                    'method= "cubic", "linear", "linear-scipy", or "gaussian"'
+                    )
 
             def log_likelihood(m1, m2):
+                # FIXME: if m1, m2 is not numpy.ndarray (e.g, scalar, it fails)
                 mc, eta = transform_m1m2_to_mceta(m1, m2)
                 ll = f(mc, eta)
                 ll = np.ma.fix_invalid(ll, fill_value=-100).data
