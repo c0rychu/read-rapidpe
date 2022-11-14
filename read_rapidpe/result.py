@@ -91,7 +91,7 @@ class RapidPE_result:
         return self.__copy__()
 
     @classmethod
-    def from_xml_array(cls, xml_array):
+    def from_xml_array(cls, xml_array, use_numpy=True):
         """
         Get result from xml.gz files
 
@@ -112,7 +112,7 @@ class RapidPE_result:
             setattr(result, attr, np.zeros(N))
 
         for i, filename in enumerate(xml_array):
-            grid_point = RapidPE_grid_point.from_xml(filename)
+            grid_point = RapidPE_grid_point.from_xml(filename, use_numpy)
 
             # Append grid-points
             result.grid_points.append(grid_point)
