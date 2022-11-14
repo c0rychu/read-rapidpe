@@ -132,7 +132,11 @@ class RapidPE_result:
 
         return cls(result)
 
-    def do_interpolate_marg_log_likelihood_m1m2(self, method="cubic"):
+    def do_interpolate_marg_log_likelihood_m1m2(
+            self,
+            method="cubic",
+            gaussian_sigma_to_grid_size_ratio=0.5
+            ):
         """
         Perfom triangular interpolation of marg_log_likelihood in
         chirp_mass (M_c), symmetric_mass_ratio (eta) space.
@@ -149,8 +153,10 @@ class RapidPE_result:
             def gaussian_log_likelihood(m1, m2):
                 result = self
                 mc_arr, eta_arr = transform_m1m2_to_mceta(m1, m2)
-                sigma_mc = grid_separation_min(result.chirp_mass)/2
-                sigma_eta = grid_separation_min(result.symmetric_mass_ratio)/2
+                sigma_mc = grid_separation_min(result.chirp_mass) *\
+                    gaussian_sigma_to_grid_size_ratio
+                sigma_eta = grid_separation_min(result.symmetric_mass_ratio) *\
+                    gaussian_sigma_to_grid_size_ratio
 
                 likelihood = np.zeros_like(mc_arr)
                 for i in range(len(result.chirp_mass)):
