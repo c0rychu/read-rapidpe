@@ -180,6 +180,35 @@ class RapidPE_result:
                 return np.log(likelihood)
 
             self.log_likelihood = gaussian_log_likelihood
+
+        elif method == "gaussian-numpy":
+            """
+            Gaussian approximation using numpy broadcasting.
+            FIXME: For some reason, it can be slower than python for-loop...
+            """
+            def gaussian_log_likelihood(m1, m2):
+                result = self
+                mc_arr, eta_arr = transform_m1m2_to_mceta(m1, m2)
+                sigma_mc = grid_separation_min(result.chirp_mass) *\
+                    gaussian_sigma_to_grid_size_ratio
+                sigma_eta = grid_separation_min(result.symmetric_mass_ratio) *\
+                    gaussian_sigma_to_grid_size_ratio
+
+                likelihood = np.sum(
+                    np.exp(result.marg_log_likelihood) *
+                    np.exp(
+                        (-0.5/sigma_mc**2 *
+                            (mc_arr[..., np.newaxis] - result.chirp_mass)**2) +
+                        (-0.5/sigma_eta**2 *
+                            (eta_arr[..., np.newaxis] -
+                                result.symmetric_mass_ratio)**2)
+                    ),
+                    axis=-1
+                )
+                return np.log(likelihood)
+
+            self.log_likelihood = gaussian_log_likelihood
+
         elif method == "linear-scipy":
 
             f = LinearNDInterpolator(
