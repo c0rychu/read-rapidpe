@@ -28,6 +28,7 @@ class RapidPE_grid_point:
             self._set_intrinsic_table()
             self.extrinsic_table = {}
             self._set_extrinsic_table()
+            self._fix_intrinsic_table_spin()  # a temporary solution
 
     def _set_intrinsic_table(self):
         # Maps are "rapidpe_name": "canonical_name"
@@ -47,6 +48,19 @@ class RapidPE_grid_point:
                     = self.intrinsic_table_raw[key]
             except KeyError:
                 pass
+
+    def _fix_intrinsic_table_spin(self):
+        """
+        Fix the missing spins in intrinsic_table.
+        """
+        if ("spin_1z" not in self.intrinsic_table) and \
+           ("spin_2z" not in self.intrinsic_table) and \
+           ("spin_1z" in self.extrinsic_table) and \
+           ("spin_2z" in self.extrinsic_table):
+            self.intrinsic_table["spin_1z"] = \
+                self.extrinsic_table["spin_1z"][0:1]
+            self.intrinsic_table["spin_2z"] = \
+                self.extrinsic_table["spin_2z"][0:1]
 
     def _set_extrinsic_table(self):
         # Maps are "rapidpe_name": "canonical_name"
