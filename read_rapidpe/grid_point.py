@@ -53,6 +53,8 @@ class RapidPE_grid_point:
         extrinsic_parameter_map = {
                                     "mass1": "mass_1",
                                     "mass2": "mass_2",
+                                    "spin1z": "spin_1z",
+                                    "spin2z": "spin_2z",
                                     "distance": "luminosity_distance",
                                     "latitude": "dec",
                                     "longitude": "ra",
