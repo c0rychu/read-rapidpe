@@ -220,8 +220,6 @@ class RapidPE_result:
             def log_likelihood(m1, m2):
                 mc, eta = transform_m1m2_to_mceta(m1, m2)
                 ll = f(mc, eta)
-                # ll = np.ma.fix_invalid(ll, fill_value=-100).data
-                # FIXME: is -100 okay?
                 return ll
 
             self.log_likelihood = log_likelihood
