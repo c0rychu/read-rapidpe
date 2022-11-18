@@ -2,7 +2,7 @@
 name = "cffi"
 version = "1.15.1"
 description = "Foreign Function Interface for Python calling C code."
-category = "main"
+category = "dev"
 optional = false
 python-versions = "*"
 
@@ -13,7 +13,7 @@ pycparser = "*"
 name = "colorama"
 version = "0.4.6"
 description = "Cross-platform colored terminal text."
-category = "main"
+category = "dev"
 optional = false
 python-versions = "!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*,!=3.5.*,!=3.6.*,>=2.7"
 
@@ -39,7 +39,7 @@ test-no-codebase = ["Pillow", "matplotlib", "pytest"]
 name = "cryptography"
 version = "38.0.3"
 description = "cryptography is a package which provides cryptographic recipes and primitives to Python developers."
-category = "main"
+category = "dev"
 optional = false
 python-versions = ">=3.6"
 
@@ -96,7 +96,7 @@ python-versions = ">=3.7"
 name = "ligo-segments"
 version = "1.4.0"
 description = "Representations of semi-open intervals"
-category = "main"
+category = "dev"
 optional = false
 python-versions = "*"
 
@@ -107,7 +107,7 @@ six = "*"
 name = "lscsoft-glue"
 version = "3.0.1"
 description = "Grid LSC User Engine"
-category = "main"
+category = "dev"
 optional = false
 python-versions = "*"
 
@@ -173,7 +173,7 @@ tests = ["check-manifest", "coverage", "defusedxml", "markdown2", "olefile", "pa
 name = "pycparser"
 version = "2.21"
 description = "C parser in Python"
-category = "main"
+category = "dev"
 optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
 
@@ -181,7 +181,7 @@ python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
 name = "pyopenssl"
 version = "22.1.0"
 description = "Python wrapper module around the OpenSSL library"
-category = "main"
+category = "dev"
 optional = false
 python-versions = ">=3.6"
 
@@ -207,7 +207,7 @@ diagrams = ["jinja2", "railroad-diagrams"]
 name = "pyrxp"
 version = "3.0.1"
 description = "Python RXP interface - fast validating XML parser"
-category = "main"
+category = "dev"
 optional = false
 python-versions = ">=3.6, <4"
 
@@ -226,7 +226,7 @@ six = ">=1.5"
 name = "python-ligo-lw"
 version = "1.8.3"
 description = "Python LIGO Light-Weight XML I/O Library"
-category = "main"
+category = "dev"
 optional = false
 python-versions = "*"
 
@@ -243,7 +243,7 @@ tqdm = "*"
 name = "pyyaml"
 version = "6.0"
 description = "YAML parser and emitter for Python"
-category = "main"
+category = "dev"
 optional = false
 python-versions = ">=3.6"
 
@@ -314,7 +314,7 @@ python-versions = ">=3.7"
 name = "tqdm"
 version = "4.64.1"
 description = "Fast, Extensible Progress Meter"
-category = "main"
+category = "dev"
 optional = false
 python-versions = "!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,>=2.7"
 
@@ -338,7 +338,7 @@ python-versions = ">=3.7"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.10"
-content-hash = "da0f4f0b8284f029f2f2c1b6edf2ee244893f4062cf9ca807b3a08022180faff"
+content-hash = "03560fbf421d62ba84d7ba05137974ddba9c581995e0b0390afa0e8a2034e4ce"
 
 [metadata.files]
 cffi = [
