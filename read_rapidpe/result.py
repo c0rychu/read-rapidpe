@@ -147,6 +147,7 @@ class RapidPE_result:
                 except KeyError:
                     pass
 
+            # Append "iteration", i.e., grid-refinement-level
             result.iteration[i] = int(re_iter.search(filename).group(1))
 
         # Add chirp_mass and symmetric_mass_ratio
@@ -179,29 +180,49 @@ class RapidPE_result:
                 sigma of gaussian with respect to grid size
 
         """
-        if method == "gaussian":
+        if method == "gaussian" or method == "gaussian-renormalized":
             def gaussian_log_likelihood(m1, m2):
-                result = self
                 mc_arr, eta_arr = transform_m1m2_to_mceta(m1, m2)
-                sigma_mc = grid_separation_min(result.chirp_mass) *\
+                sigma_mc = grid_separation_min(self.chirp_mass) *\
                     gaussian_sigma_to_grid_size_ratio
-                sigma_eta = grid_separation_min(result.symmetric_mass_ratio) *\
+                sigma_eta = grid_separation_min(self.symmetric_mass_ratio) *\
                     gaussian_sigma_to_grid_size_ratio
 
                 likelihood = np.zeros_like(mc_arr)
-                for i in range(len(result.chirp_mass)):
+                for i in range(len(self.chirp_mass)):
                     likelihood += \
-                        np.exp(result.marg_log_likelihood[i]) * \
+                        np.exp(self.marg_log_likelihood[i]) * \
                         np.exp(
                             (-0.5/sigma_mc**2
-                             * (mc_arr - result.chirp_mass[i])**2) +
+                             * (mc_arr - self.chirp_mass[i])**2) +
                             (-0.5/sigma_eta**2
-                             * (eta_arr - result.symmetric_mass_ratio[i])**2)
+                             * (eta_arr - self.symmetric_mass_ratio[i])**2)
                         )
-                # print(sigma_eta, sigma_mc)
                 return np.log(likelihood)
-
             self.log_likelihood = gaussian_log_likelihood
+
+            if method == "gaussian-renormalized":
+                # FIXME: The max point can shft if sigma is large.
+
+                # old_max = np.exp(self.marg_log_likelihood.max())
+                # old_max_idx = np.argmax(self.marg_log_likelihood)
+                # new_max = np.exp(
+                #     gaussian_log_likelihood(self.mass_1[old_max_idx],
+                #                             self.mass_2[old_max_idx])
+                # )
+
+                self_interp = gaussian_log_likelihood(self.mass_1, self.mass_2)
+                new_max = self_interp.max()
+                new_max_idx = np.argmax(self_interp)
+                old_max = self.marg_log_likelihood[new_max_idx]
+
+                print("old_max: ", np.exp(old_max))
+                print("new_max: ", np.exp(new_max))
+
+                def gaussian_log_likelihood_renormalized(m1, m2):
+                    return gaussian_log_likelihood(m1, m2) + old_max - new_max
+
+                self.log_likelihood = gaussian_log_likelihood_renormalized
 
         elif method == "gaussian-numpy":
             """
@@ -232,7 +253,6 @@ class RapidPE_result:
             self.log_likelihood = gaussian_log_likelihood
 
         elif method == "linear-scipy":
-
             f = LinearNDInterpolator(
                 list(zip(self.chirp_mass, self.symmetric_mass_ratio)),
                 self.marg_log_likelihood,
