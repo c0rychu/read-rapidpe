@@ -3,6 +3,7 @@ Read and parse RapidPE output result for post-processing.
 Author: Cory Chu <cory@gwlab.page>
 """
 
+import re
 import numpy as np
 from .grid_point import RapidPE_grid_point
 from .transform import transform_m1m2_to_mceta
@@ -68,7 +69,7 @@ class RapidPE_result:
 
     def __init__(self, result=None):
         if result is None:
-            self.grid_points = []
+            self.grid_points = []  # FIXME: it's actually a np.array
             self._keys = []
         else:
             self.grid_points = result.grid_points
@@ -115,9 +116,19 @@ class RapidPE_result:
             ).intrinsic_table.keys()
         result._keys = list(result._keys)
 
+        # Initialize attributes
         for attr in result._keys:
             setattr(result, attr, np.zeros(N))
 
+        # Initialize "grid_points" attribute
+        result.grid_points = np.empty(N, dtype=object)
+
+        # Setup for "iteration" attribute
+        result._keys.append("iteration")
+        result.iteration = np.zeros(N, dtype=int)
+        re_iter = re.compile(r"ILE_iteration_([0-9]+).+\.xml\.gz")
+
+        # Read XML grid points
         for i, filename in enumerate(xml_array):
             grid_point = RapidPE_grid_point.from_xml(
                 filename,
@@ -126,7 +137,7 @@ class RapidPE_result:
             )
 
             # Append grid-points
-            result.grid_points.append(grid_point)
+            result.grid_points[i] = grid_point
 
             # Append Intrinsic Parameters of grid-points
             for attr in result._keys:
@@ -136,6 +147,9 @@ class RapidPE_result:
                 except KeyError:
                     pass
 
+            result.iteration[i] = int(re_iter.search(filename).group(1))
+
+        # Add chirp_mass and symmetric_mass_ratio
         if ("mass_1" in result._keys) and ("mass_2" in result._keys):
             result.chirp_mass, result.symmetric_mass_ratio = \
                 transform_m1m2_to_mceta(result.mass_1, result.mass_2)
