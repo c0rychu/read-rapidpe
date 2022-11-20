@@ -1,5 +1,19 @@
 """
 Parse the RapidPE results
+
+
+!!!! IMPORTANT !!!!
+!!!! IMPORTANT !!!!
+!!!! IMPORTANT !!!!
+
+    All classes in this file (parser.py) is deprecated.
+    Please use RapidPE_result.from_xml_array() defined in result.py instead.
+
+!!!! IMPORTANT !!!!
+!!!! IMPORTANT !!!!
+!!!! IMPORTANT !!!!
+
+
 Author: Cory Chu <cory@gwlab.page>
 """
 
