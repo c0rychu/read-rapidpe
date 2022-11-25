@@ -1,9 +1,21 @@
 """
-Utility functions copied from RapidPE repo.
+Utility functions of coordinate transformation.
+Some of them are copied from RapidPE repo.
 TODO: Write my own version.
 """
 
 import numpy as np
+
+
+def jacobian_m1m2_by_mceta(mc, eta):
+    """
+    return the Jacobian (m1, m2)/(mc, eta)
+    """
+    assert np.all(mc > 0), "chirp_mass (Mc) should > 0"
+    assert np.all(eta > 0), "symmetric_mass_ratio (eta) should > 0"
+    assert np.all(eta <= 0.25), "symmetric_mass_ratio (eta) should <= 0.25"
+
+    return mc / (np.sqrt(1. - 4.*eta) * eta**1.2)  # 6/5 = 1.2
 
 
 # =====================================================================
