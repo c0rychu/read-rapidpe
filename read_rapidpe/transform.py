@@ -18,6 +18,13 @@ def jacobian_m1m2_by_mceta(mc, eta):
     return mc / (np.sqrt(1. - 4.*eta) * eta**1.2)  # 6/5 = 1.2
 
 
+def jacobian_mceta_by_m1m2(m1, m2):
+    """
+    return the Jacobian (mc, eta)/(m1, m2)
+    """
+    return (m1-m2)*(m1*m2)**0.6 / (m1+m2)**3.2  # 3/5 = 0.6, 16/5 = 3.2
+
+
 # =====================================================================
 # This Section is copied from
 # https://git.ligo.org/rapidpe-rift/rapidpe/-/blob/master/rapid_pe/lalsimutils.py
