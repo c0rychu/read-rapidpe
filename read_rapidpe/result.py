@@ -181,21 +181,47 @@ class RapidPE_result:
 
         """
         if method == "gaussian" or method == "gaussian-renormalized":
+            # def gaussian_log_likelihood(m1, m2):
+            #     mc_arr, eta_arr = transform_m1m2_to_mceta(m1, m2)
+            #     sigma_mc = grid_separation_min(self.chirp_mass) *\
+            #         gaussian_sigma_to_grid_size_ratio
+            #     sigma_eta = grid_separation_min(self.symmetric_mass_ratio) *\
+            #         gaussian_sigma_to_grid_size_ratio
+
+            #     likelihood = np.zeros_like(mc_arr)
+            #     for i in range(len(self.chirp_mass)):
+            #         likelihood += \
+            #             np.exp(self.marg_log_likelihood[i]) * \
+            #             np.exp(
+            #                 (-0.5/sigma_mc**2
+            #                  * (mc_arr - self.chirp_mass[i])**2) +
+            #                 (-0.5/sigma_eta**2
+            #                  * (eta_arr - self.symmetric_mass_ratio[i])**2)
+            #             )
+            #     return np.log(likelihood)
             def gaussian_log_likelihood(m1, m2):
                 mc_arr, eta_arr = transform_m1m2_to_mceta(m1, m2)
-                sigma_mc = grid_separation_min(self.chirp_mass) *\
-                    gaussian_sigma_to_grid_size_ratio
-                sigma_eta = grid_separation_min(self.symmetric_mass_ratio) *\
-                    gaussian_sigma_to_grid_size_ratio
+
+                grid_levels = np.unique(self.iteration)
+                sigma_mc = {}
+                sigma_eta = {}
+
+                for gl in grid_levels:
+                    sigma_mc[gl] = grid_separation_min(
+                            self.chirp_mass[self.iteration == gl]
+                        ) * gaussian_sigma_to_grid_size_ratio
+                    sigma_eta[gl] = grid_separation_min(
+                            self.symmetric_mass_ratio[self.iteration == gl]
+                        ) * gaussian_sigma_to_grid_size_ratio
 
                 likelihood = np.zeros_like(mc_arr)
                 for i in range(len(self.chirp_mass)):
                     likelihood += \
                         np.exp(self.marg_log_likelihood[i]) * \
                         np.exp(
-                            (-0.5/sigma_mc**2
+                            (-0.5/sigma_mc[self.iteration[i]]**2
                              * (mc_arr - self.chirp_mass[i])**2) +
-                            (-0.5/sigma_eta**2
+                            (-0.5/sigma_eta[self.iteration[i]]**2
                              * (eta_arr - self.symmetric_mass_ratio[i])**2)
                         )
                 return np.log(likelihood)
