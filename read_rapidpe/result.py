@@ -6,11 +6,13 @@ Author: Cory Chu <cory@gwlab.page>
 import re
 import numpy as np
 from .grid_point import RapidPE_grid_point
-from .transform import transform_m1m2_to_mceta
+from .transform import transform_m1m2_to_mceta, transform_mceta_to_m1m2
+from .transform import jacobian_mceta_by_m1m2
 
 from matplotlib.tri import Triangulation
 from matplotlib.tri import LinearTriInterpolator, CubicTriInterpolator
 from scipy.interpolate import LinearNDInterpolator
+from scipy.stats import multinomial
 
 
 def unique_with_tolerance(array, tolerance):
@@ -320,3 +322,48 @@ class RapidPE_result:
         #       scipy.interpolate.LinearNDInterpolator
         #       Ref:https://docs.scipy.org/doc/scipy/reference/generated/scipy.interpolate.LinearNDInterpolator.html
         raise NotImplementedError("to be support in the future")
+
+    def generate_samples(self, N=5000, method="gaussian"):
+        if method == "gaussian":
+            sigma_mc = grid_separation_min(self.chirp_mass) * 0.5
+            sigma_eta = grid_separation_min(self.symmetric_mass_ratio) * 0.5
+            cov = np.diag([sigma_mc**2, sigma_eta**2])
+
+            likelihood = np.exp(self.marg_log_likelihood)
+            sum_likelihood = np.sum(likelihood)
+
+            N_multinomial = multinomial(N*20, likelihood/sum_likelihood)
+            N_per_grid_point = N_multinomial.rvs(1)[0]
+
+            samples = np.zeros([0, 2])
+            for mc, eta, lh, n in zip(self.chirp_mass,
+                                      self.symmetric_mass_ratio,
+                                      likelihood,
+                                      N_per_grid_point):
+                samples = np.concatenate([
+                    samples,
+                    np.random.multivariate_normal([mc, eta], cov, n)
+                    ])
+            mc, eta = samples.T
+
+            # Mask out the samples outside the grid regin
+            eta_max = self.symmetric_mass_ratio.max()
+            eta_min = self.symmetric_mass_ratio.min()
+            mask = np.logical_and(eta <= eta_max, eta >= eta_min)
+
+            # mc_max = self.chirp_mass.max()
+            # mc_min = self.chirp_mass.min()
+            # mask = np.logical_and(mask, mc >= mc_min)
+            # mask = np.logical_and(mask, mc <= mc_max)
+
+            mc, eta = mc[mask], eta[mask]
+            m1, m2 = transform_mceta_to_m1m2(mc, eta)
+
+            prob = 1/jacobian_mceta_by_m1m2(m1, m2)
+            prob /= np.sum(prob)
+
+            m = [{"m1": m1[i], "m2": m2[i]} for i in range(len(m1))]
+            # m_samples = np.random.choice(m, size=N, p=prob)
+            m_samples = np.random.choice(m, size=N, p=prob, replace=False)
+            m1, m2 = np.array([[x["m1"], x["m2"]] for x in m_samples]).T
+            self.samples = {"mass_1": m1, "mass_2": m2}
