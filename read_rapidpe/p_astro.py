@@ -62,6 +62,11 @@ def p_astro(result, ml=1, mm=3, mh=100):
     ])
     rate /= rate.sum()
 
+    try:
+        result.samples
+    except AttributeError:
+        result.generate_samples()
+
     p_astro = np.array([
         evidence_integral(result, uniform_in_m1m2(ml, mm)),
         evidence_integral(result, uniform_in_m1m2_nsbh(ml, mm, mh)),
