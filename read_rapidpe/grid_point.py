@@ -131,8 +131,8 @@ class RapidPE_grid_point:
 
     @classmethod
     def _get_root_xml_gz(cls, input_xml_gz):
-        input_xml = gzip.open(input_xml_gz, 'r')
-        tree = ET.parse(input_xml)
+        with gzip.open(input_xml_gz, 'r') as input_xml:
+            tree = ET.parse(input_xml)
         root = tree.getroot()
         return root
 
