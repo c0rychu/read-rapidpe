@@ -91,7 +91,11 @@ class RapidPE_grid_point:
                 pass
 
     @classmethod
-    def from_xml(cls, filename: str, use_numpy=True, use_ligolw=True):
+    def from_xml(cls,
+                 filename: str,
+                 use_numpy=True,
+                 use_ligolw=True,
+                 extrinsic_table=True):
         """
         Extract XML, assign to "raw" attributes
         "sngl_inspiral:table" -> self.intrinsic_table_raw
@@ -110,12 +114,14 @@ class RapidPE_grid_point:
             use_numpy=use_numpy,
             use_ligolw=use_ligolw
             )
-        grid_point.extrinsic_table_raw = cls._get_ligolw_table(
-            input_xml_gz,
-            tablename="sim_inspiral:table",
-            use_numpy=use_numpy,
-            use_ligolw=use_ligolw
-            )
+
+        if extrinsic_table:
+            grid_point.extrinsic_table_raw = cls._get_ligolw_table(
+                input_xml_gz,
+                tablename="sim_inspiral:table",
+                use_numpy=use_numpy,
+                use_ligolw=use_ligolw
+                )
         return cls(grid_point)
 
     # ===============

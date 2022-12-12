@@ -97,7 +97,11 @@ class RapidPE_result:
         return self.__copy__()
 
     @classmethod
-    def from_xml_array(cls, xml_array, use_numpy=True, use_ligolw=True):
+    def from_xml_array(cls,
+                       xml_array,
+                       use_numpy=True,
+                       use_ligolw=True,
+                       extrinsic_table=True):
         """
         Get result from xml.gz files
 
@@ -114,7 +118,8 @@ class RapidPE_result:
             RapidPE_grid_point.from_xml(
                 xml_array[0],
                 use_numpy=use_numpy,
-                use_ligolw=use_ligolw
+                use_ligolw=use_ligolw,
+                extrinsic_table=extrinsic_table
             ).intrinsic_table.keys()
         result._keys = list(result._keys)
 
@@ -135,7 +140,8 @@ class RapidPE_result:
             grid_point = RapidPE_grid_point.from_xml(
                 filename,
                 use_numpy=use_numpy,
-                use_ligolw=use_ligolw
+                use_ligolw=use_ligolw,
+                extrinsic_table=extrinsic_table
             )
 
             # Append grid-points
