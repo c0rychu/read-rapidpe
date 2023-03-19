@@ -331,28 +331,45 @@ class RapidPE_result:
 
     def generate_samples(self, N=5000, method="gaussian"):
         if method == "gaussian":
-            sigma_mc = grid_separation_min(self.chirp_mass) * 0.5
-            sigma_eta = grid_separation_min(self.symmetric_mass_ratio) * 0.5
-            cov = np.diag([sigma_mc**2, sigma_eta**2])
+            # Grid-level-independent covariance matrix (old method)
+            #
+            # sigma_mc = grid_separation_min(self.chirp_mass) * 0.5
+            # sigma_eta = grid_separation_min(self.symmetric_mass_ratio) * 0.5
+            # cov = np.diag([sigma_mc**2, sigma_eta**2])
 
+            # Compute covariance matrix for different grid levels
+            grid_levels = np.unique(self.iteration)
+            cov = {}
+            for gl in grid_levels:
+                mask = self.iteration == gl
+                sigma_mc = grid_separation_min(
+                    self.chirp_mass[mask]) * 0.5
+                sigma_eta = grid_separation_min(
+                    self.symmetric_mass_ratio[mask]) * 0.5
+                cov[gl] = np.diag([sigma_mc**2, sigma_eta**2])
+
+            # Compute likelihood at each grid point
             likelihood = np.exp(self.marg_log_likelihood)
             sum_likelihood = np.sum(likelihood)
 
+            # Compute number of samples for each grid point
             N_multinomial = multinomial(N*20, likelihood/sum_likelihood)
             N_per_grid_point = N_multinomial.rvs(1)[0]
 
+            # Generate samples
             samples = np.zeros([0, 2])
-            for mc, eta, lh, n in zip(self.chirp_mass,
-                                      self.symmetric_mass_ratio,
-                                      likelihood,
-                                      N_per_grid_point):
+            for mc, eta, lh, gl, n in zip(self.chirp_mass,
+                                          self.symmetric_mass_ratio,
+                                          likelihood,
+                                          self.iteration,
+                                          N_per_grid_point):
                 samples = np.concatenate([
                     samples,
-                    np.random.multivariate_normal([mc, eta], cov, n)
+                    np.random.multivariate_normal([mc, eta], cov[gl], n)
                     ])
             mc, eta = samples.T
 
-            # Mask out the samples outside the grid regin
+            # Mask out the samples outside the grid region
             eta_max = self.symmetric_mass_ratio.max()
             eta_min = self.symmetric_mass_ratio.min()
             mask = np.logical_and(eta <= eta_max, eta >= eta_min)
