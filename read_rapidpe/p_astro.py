@@ -54,7 +54,9 @@ def evidence_integral(res, prior):
 
 def _bayes_factor(result, prior):
     # Define Mesh in mc, eta space for likelihood integral
-    mclist = np.linspace(result.chirp_mass.min()+0.0001, result.chirp_mass.max()-0.0001, 500)
+    mclist = np.linspace(result.chirp_mass.min()+0.0001,
+                         result.chirp_mass.max()-0.0001,
+                         500)
     etalist = np.linspace(result.symmetric_mass_ratio.min()+0.0001,
                           result.symmetric_mass_ratio.max()-0.0001,
                           500)
