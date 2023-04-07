@@ -98,7 +98,7 @@ def p_astro(result, ml=1, mm=3, mh=100):
         p_nsbh_in_H1,
         p_bbh_in_H1
     ])
-    rate /= rate.sum()  
+    rate /= rate.sum()
 
     # Define prior \pi(\theta \vert H_\alpha)
     # FIXME: Replaced by priors from population model
