@@ -52,36 +52,50 @@ def evidence_integral(res, prior):
     return np.sum(prior(res.samples["mass_1"], res.samples["mass_2"]))/N
 
 
+def _Z_in_m1m2(result, method="riemann-sum"):
+    """
+    calculate Z = \\int L_marg(d | m1, m2) dm1 dm2
+    """
+
+    mc_min = result.chirp_mass.min()+0.0001
+    mc_max = result.chirp_mass.max()-0.0001
+    eta_min = result.symmetric_mass_ratio.min()+0.0001
+    eta_max = result.symmetric_mass_ratio.max()-0.0001
+
+    if method == "riemann-sum":
+        # Define Mesh in mc, eta space for likelihood integral
+        mclist = np.linspace(mc_min, mc_max, 500)
+        etalist = np.linspace(eta_min, eta_max, 500)
+        delta_mc = mclist[1]-mclist[0]
+        delta_eta = etalist[1]-etalist[0]
+        mc, eta = np.meshgrid(mclist, etalist)
+
+        # Interpolating likelihood
+        res = result.copy()
+        # TODO: Decide the interpolation method
+        res.do_interpolate_marg_log_likelihood_m1m2(method="linear-scipy")
+        # res.do_interpolate_marg_log_likelihood_m1m2(method="gaussian")
+
+        mass1, mass2 = transform_mceta_to_m1m2(mc, eta)
+        likelihood = np.exp(res.log_likelihood(mass1, mass2))
+        jacobian = jacobian_m1m2_by_mceta(mc, eta)
+
+        Z = delta_eta * delta_mc * np.sum(likelihood*jacobian)
+
+        return Z
+
+
 def _bayes_factor(result, prior):
-    # Define Mesh in mc, eta space for likelihood integral
-    mclist = np.linspace(result.chirp_mass.min()+0.0001,
-                         result.chirp_mass.max()-0.0001,
-                         500)
-    etalist = np.linspace(result.symmetric_mass_ratio.min()+0.0001,
-                          result.symmetric_mass_ratio.max()-0.0001,
-                          500)
-    delta_mc = mclist[1]-mclist[0]
-    delta_eta = etalist[1]-etalist[0]
-    mc, eta = np.meshgrid(mclist, etalist)
-
-    # Interpolating likelihood
-    res = result.copy()
-    # TODO: Decide the interpolation method
-    res.do_interpolate_marg_log_likelihood_m1m2(method="linear-scipy")
-    # res.do_interpolate_marg_log_likelihood_m1m2(method="gaussian")
-
-    mass1, mass2 = transform_mceta_to_m1m2(mc, eta)
-    likelihood = np.exp(res.log_likelihood(mass1, mass2))
-    jacobian = jacobian_m1m2_by_mceta(mc, eta)
-
-    Z = delta_eta * delta_mc * np.sum(likelihood*jacobian)
+    """
+    bayes factor = p(d|H_1) / p(d|H_0)
+    """
 
     try:
         result.samples
     except AttributeError:
         result.generate_samples()
 
-    bayes_factor = Z * evidence_integral(result, prior)
+    bayes_factor = _Z_in_m1m2(result) * evidence_integral(result, prior)
     return bayes_factor
 
 
