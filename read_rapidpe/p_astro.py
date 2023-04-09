@@ -7,7 +7,7 @@ from read_rapidpe.transform import transform_mceta_to_m1m2
 from read_rapidpe.transform import jacobian_m1m2_by_mceta
 
 
-class uniform_in_m1m2(object):
+class Uniform_in_m1m2(object):
     def __init__(self, m_lower, m_upper):
         self.m_lower = m_lower
         self.m_upper = m_upper
@@ -26,7 +26,7 @@ class uniform_in_m1m2(object):
             return 2./(self.m_upper - self.m_lower)**2
 
 
-class uniform_in_m1m2_nsbh(object):
+class Uniform_in_m1m2_nsbh(object):
     def __init__(self, m_lower, m_mid, m_upper):
         self.m_lower = m_lower
         self.m_mid = m_mid
@@ -102,9 +102,9 @@ def p_astro(result, ml=1, mm=3, mh=100):
 
     # Define prior \pi(\theta \vert H_\alpha)
     # FIXME: Replaced by priors from population model
-    prior_bns = uniform_in_m1m2(ml, mm)
-    prior_nsbh = uniform_in_m1m2_nsbh(ml, mm, mh)
-    prior_bbh = uniform_in_m1m2(mm, mh)
+    prior_bns = Uniform_in_m1m2(ml, mm)
+    prior_nsbh = Uniform_in_m1m2_nsbh(ml, mm, mh)
+    prior_bbh = Uniform_in_m1m2(mm, mh)
 
     def prior_astro(m1, m2):
         prior = rate[0] * prior_bns(m1, m2) + \
