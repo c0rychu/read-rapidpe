@@ -3,6 +3,7 @@ Author: Cory Chu <cory@gwlab.page>
 """
 
 import numpy as np
+from scipy import integrate
 from read_rapidpe.transform import transform_mceta_to_m1m2
 from read_rapidpe.transform import jacobian_m1m2_by_mceta
 
@@ -62,6 +63,18 @@ def _Z_in_m1m2(result, method="riemann-sum"):
     eta_min = result.symmetric_mass_ratio.min()+0.0001
     eta_max = result.symmetric_mass_ratio.max()-0.0001
 
+    # Interpolating likelihood
+    res = result.copy()
+    # TODO: Decide the interpolation method
+    res.do_interpolate_marg_log_likelihood_m1m2(method="linear-scipy")
+    # res.do_interpolate_marg_log_likelihood_m1m2(method="gaussian")
+
+    def f(mc, eta):
+        mass1, mass2 = transform_mceta_to_m1m2(mc, eta)
+        likelihood = np.exp(res.log_likelihood(mass1, mass2))
+        jacobian = jacobian_m1m2_by_mceta(mc, eta)
+        return likelihood * jacobian
+
     if method == "riemann-sum":
         # Define Mesh in mc, eta space for likelihood integral
         mclist = np.linspace(mc_min, mc_max, 500)
@@ -70,19 +83,21 @@ def _Z_in_m1m2(result, method="riemann-sum"):
         delta_eta = etalist[1]-etalist[0]
         mc, eta = np.meshgrid(mclist, etalist)
 
-        # Interpolating likelihood
-        res = result.copy()
-        # TODO: Decide the interpolation method
-        res.do_interpolate_marg_log_likelihood_m1m2(method="linear-scipy")
-        # res.do_interpolate_marg_log_likelihood_m1m2(method="gaussian")
-
-        mass1, mass2 = transform_mceta_to_m1m2(mc, eta)
-        likelihood = np.exp(res.log_likelihood(mass1, mass2))
-        jacobian = jacobian_m1m2_by_mceta(mc, eta)
-
-        Z = delta_eta * delta_mc * np.sum(likelihood*jacobian)
-
+        Z = delta_eta * delta_mc * np.sum(f(mc, eta))
         return Z
+
+    elif method == "scipy-dblquad":
+        def g(eta, mc):  # g(y, x) for dblquad
+            return f(mc, eta)
+
+        Z = integrate.dblquad(g, mc_min, mc_max, eta_min, eta_max,
+                              epsrel=1e-2)  # FIXME: Is 1e-2 okay?
+        return Z[0]
+
+    else:
+        raise ValueError(
+            'method= "scipy-dblquad" or "riemann-sum"'
+            )
 
 
 def _bayes_factor(result, prior):
