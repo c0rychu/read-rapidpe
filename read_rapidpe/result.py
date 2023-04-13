@@ -168,7 +168,7 @@ class RapidPE_result:
 
     def do_interpolate_marg_log_likelihood_m1m2(
             self,
-            method="cubic",
+            method="linear-scipy",
             gaussian_sigma_to_grid_size_ratio=0.5
             ):
         """
