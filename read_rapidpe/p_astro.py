@@ -64,14 +64,14 @@ def _Z_in_m1m2(result, method="riemann-sum"):
     eta_max = result.symmetric_mass_ratio.max()-0.0001
 
     # Interpolating likelihood
-    res = result.copy()
-    # TODO: Decide the interpolation method
-    res.do_interpolate_marg_log_likelihood_m1m2(method="linear-scipy")
-    # res.do_interpolate_marg_log_likelihood_m1m2(method="gaussian")
+    if not hasattr(result, "log_likelihood"):
+        # TODO: Decide the interpolation method
+        result.do_interpolate_marg_log_likelihood_m1m2(method="linear-scipy")
+        # result.do_interpolate_marg_log_likelihood_m1m2(method="gaussian")
 
     def f(mc, eta):
         mass1, mass2 = transform_mceta_to_m1m2(mc, eta)
-        likelihood = np.exp(res.log_likelihood(mass1, mass2))
+        likelihood = np.exp(result.log_likelihood(mass1, mass2))
         jacobian = jacobian_m1m2_by_mceta(mc, eta)
         return likelihood * jacobian
 
@@ -105,9 +105,7 @@ def _bayes_factor(result, prior):
     bayes factor = p(d|H_1) / p(d|H_0)
     """
 
-    try:
-        result.samples
-    except AttributeError:
+    if not hasattr(result, "samples"):
         result.generate_samples()
 
     bayes_factor = _Z_in_m1m2(result) * evidence_integral(result, prior)
@@ -145,9 +143,7 @@ def p_astro(result, ml=1, mm=3, mh=100):
     prior_odd = 1
 
     # Calculation
-    try:
-        result.samples
-    except AttributeError:
+    if not hasattr(result, "samples"):
         result.generate_samples()
 
     p_astro = np.array([
