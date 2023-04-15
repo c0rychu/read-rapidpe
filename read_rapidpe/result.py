@@ -11,7 +11,7 @@ from .transform import jacobian_mceta_by_m1m2
 
 from matplotlib.tri import Triangulation
 from matplotlib.tri import LinearTriInterpolator, CubicTriInterpolator
-from scipy.interpolate import LinearNDInterpolator
+from scipy.interpolate import LinearNDInterpolator, NearestNDInterpolator
 from scipy.stats import multinomial
 
 
@@ -188,6 +188,11 @@ class RapidPE_result:
                 sigma of gaussian with respect to grid size
 
         """
+
+        _supported_methods = \
+            'method= "cubic", "linear", "linear-scipy", nearest-scipy,' \
+            'gaussian, or "gaussian-renormalized"'
+
         if method == "gaussian" or method == "gaussian-renormalized":
             # def gaussian_log_likelihood(m1, m2):
             #     mc_arr, eta_arr = transform_m1m2_to_mceta(m1, m2)
@@ -286,12 +291,22 @@ class RapidPE_result:
 
             self.log_likelihood = gaussian_log_likelihood
 
-        elif method == "linear-scipy":
-            f = LinearNDInterpolator(
-                list(zip(self.chirp_mass, self.symmetric_mass_ratio)),
-                self.marg_log_likelihood,
-                fill_value=-100  # FIXME: is -100 okay?
-                )
+        elif "scipy" in method:
+            if method == "linear-scipy":
+                f = LinearNDInterpolator(
+                    list(zip(self.chirp_mass, self.symmetric_mass_ratio)),
+                    self.marg_log_likelihood,
+                    rescale=True,
+                    fill_value=-100  # FIXME: is -100 okay?
+                    )
+            elif method == "nearest-scipy":
+                f = NearestNDInterpolator(
+                    list(zip(self.chirp_mass, self.symmetric_mass_ratio)),
+                    self.marg_log_likelihood,
+                    rescale=True
+                    )
+            else:
+                raise ValueError(_supported_methods)
 
             def log_likelihood(m1, m2):
                 mc, eta = transform_m1m2_to_mceta(m1, m2)
@@ -309,9 +324,7 @@ class RapidPE_result:
             elif method == "linear":
                 f = LinearTriInterpolator(triangles, self.marg_log_likelihood)
             else:
-                raise ValueError(
-                    'method= "cubic", "linear", "linear-scipy", or "gaussian"'
-                    )
+                raise ValueError(_supported_methods)
 
             def log_likelihood(m1, m2):
                 # FIXME: if m1, m2 is not numpy.ndarray (e.g, scalar, it fails)
