@@ -12,6 +12,7 @@ from .transform import jacobian_mceta_by_m1m2
 from matplotlib.tri import Triangulation
 from matplotlib.tri import LinearTriInterpolator, CubicTriInterpolator
 from scipy.interpolate import LinearNDInterpolator, NearestNDInterpolator
+from scipy.interpolate import CloughTocher2DInterpolator
 from scipy.stats import multinomial
 
 
@@ -190,8 +191,8 @@ class RapidPE_result:
         """
 
         _supported_methods = \
-            'method= "cubic", "linear", "linear-scipy", nearest-scipy,' \
-            'gaussian, or "gaussian-renormalized"'
+            'method= "cubic", "linear", "linear-scipy", "nearest-scipy",' \
+            '"cubic-scipy", "gaussian", or "gaussian-renormalized"'
 
         if method == "gaussian" or method == "gaussian-renormalized":
             # def gaussian_log_likelihood(m1, m2):
@@ -294,6 +295,13 @@ class RapidPE_result:
         elif "scipy" in method:
             if method == "linear-scipy":
                 f = LinearNDInterpolator(
+                    list(zip(self.chirp_mass, self.symmetric_mass_ratio)),
+                    self.marg_log_likelihood,
+                    rescale=True,
+                    fill_value=-100  # FIXME: is -100 okay?
+                    )
+            elif method == "cubic-scipy":
+                f = CloughTocher2DInterpolator(
                     list(zip(self.chirp_mass, self.symmetric_mass_ratio)),
                     self.marg_log_likelihood,
                     rescale=True,
