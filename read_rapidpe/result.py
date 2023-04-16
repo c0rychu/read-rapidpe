@@ -3,6 +3,7 @@ Read and parse RapidPE output result for post-processing.
 Author: Cory Chu <cory@gwlab.page>
 """
 
+from pathlib import Path
 import re
 import numpy as np
 from .grid_point import RapidPE_grid_point
@@ -96,6 +97,39 @@ class RapidPE_result:
 
     def copy(self):
         return self.__copy__()
+
+    @classmethod
+    def from_run_dir(cls,
+                     run_dir,
+                     use_numpy=True,
+                     use_ligolw=True,
+                     extrinsic_table=True):
+        """
+        Get result from a Rapid-PE run_dir
+
+        Example
+        -------
+            result = RapidPE_result.from_run_dir("path/to/run_dir")
+
+        Attributes
+        ----------
+        run_dir : string or pathlib's Path() object
+            The path to rapid-pe run_dir
+
+        use_ligolw : bool
+            Whether using ligo.lw to read xml files
+
+        extrinsic_table : bool
+            Whether loading extrinsic_table as well
+
+        """
+        results_dir = Path(run_dir)/Path("results")
+        xml_array = [f.as_posix() for f in results_dir.glob("*.xml.gz")]
+
+        return cls.from_xml_array(xml_array,
+                                  use_numpy=use_numpy,
+                                  use_ligolw=use_ligolw,
+                                  extrinsic_table=extrinsic_table)
 
     @classmethod
     def from_xml_array(cls,
