@@ -1,4 +1,12 @@
+import numpy as np
+
+
 def pretty_plt(plt, usetex=True):
+    """
+    import read_rapidpe.plot as rrp
+    import matplotlib.pyplot as plt
+    rrp.pretty_plt(plt)
+    """
     # -----------------------------------------------
     # Reference:
     # https://matplotlib.org/stable/tutorials/introductory/customizing.html
@@ -22,3 +30,16 @@ def pretty_plt(plt, usetex=True):
     plt.rc('font', family='serif')
     plt.rc('lines', linewidth=0.5)  # Linewidth of data
     plt.rc('savefig', dpi=300)
+
+
+def meshgrid_mceta(result, n=100):
+    mclist = np.linspace(
+        result.chirp_mass.min()+0.00001,
+        result.chirp_mass.max()-0.00001,
+        n)
+    etalist = np.linspace(
+        result.symmetric_mass_ratio.min()+0.00001,
+        result.symmetric_mass_ratio.max()-0.00001,
+        n)
+    mc, eta = np.meshgrid(mclist, etalist)
+    return mc, eta

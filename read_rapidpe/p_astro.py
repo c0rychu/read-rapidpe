@@ -95,10 +95,10 @@ def _Z_in_m1m2(result, method="riemann-sum"):
     calculate Z = \\int L_marg(d | m1, m2) dm1 dm2
     """
 
-    mc_min = result.chirp_mass.min()+0.0001
-    mc_max = result.chirp_mass.max()-0.0001
-    eta_min = result.symmetric_mass_ratio.min()+0.0001
-    eta_max = result.symmetric_mass_ratio.max()-0.0001
+    mc_min = result.chirp_mass.min()+0.00001
+    mc_max = result.chirp_mass.max()-0.00001
+    eta_min = result.symmetric_mass_ratio.min()+0.00001
+    eta_max = result.symmetric_mass_ratio.max()-0.00001
 
     # Choose interpolating likelihood (if not exist)
     if not hasattr(result, "log_likelihood"):
