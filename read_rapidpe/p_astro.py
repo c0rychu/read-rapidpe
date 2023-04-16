@@ -75,11 +75,9 @@ def _Z_in_m1m2(result, method="riemann-sum"):
     eta_min = result.symmetric_mass_ratio.min()+0.0001
     eta_max = result.symmetric_mass_ratio.max()-0.0001
 
-    # Interpolating likelihood
+    # Choose interpolating likelihood (if not exist)
     if not hasattr(result, "log_likelihood"):
-        # TODO: Decide the interpolation method
         result.do_interpolate_marg_log_likelihood_m1m2(method="linear-scipy")
-        # result.do_interpolate_marg_log_likelihood_m1m2(method="gaussian")
 
     def f(mc, eta):
         mass1, mass2 = transform_mceta_to_m1m2(mc, eta)
