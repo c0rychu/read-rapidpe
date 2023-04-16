@@ -12,10 +12,23 @@ class Uniform_in_m1m2(object):
     def __init__(self, m_lower, m_upper):
         self.m_lower = m_lower
         self.m_upper = m_upper
-        self._prior_np = np.vectorize(self._prior, excluded="self")
+        self.ans = 2. / (self.m_upper - self.m_lower)**2
+        # self._prior_np = np.vectorize(self._prior, excluded="self")
 
     def __call__(self, m1, m2):
-        return self._prior_np(m1, m2)
+        if np.isscalar(m1):
+            return self._prior(m1, m2)
+        else:
+            return self._prior_np(m1, m2)
+
+    def _prior_np(self, m1, m2):
+        return (np.piecewise(
+                    m1, [m1 < m2, m1 >= m2], [0., 1.]) *
+                np.piecewise(
+                    m2, [m2 < self.m_lower, m2 >= self.m_lower], [0., 1.]) *
+                np.piecewise(
+                    m1, [m1 <= self.m_upper, m1 > self.m_upper], [1., 0.]) *
+                self.ans)
 
     def _prior(self, m1, m2):
         if m1 < m2:
@@ -23,8 +36,7 @@ class Uniform_in_m1m2(object):
         elif m2 < self.m_lower or m1 > self.m_upper:
             return 0.
         else:
-            # FIXME: is the "2." a correct normailzation?
-            return 2./(self.m_upper - self.m_lower)**2
+            return self.ans
 
 
 class Uniform_in_m1m2_nsbh(object):
