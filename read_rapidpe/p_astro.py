@@ -8,6 +8,31 @@ from read_rapidpe.transform import transform_mceta_to_m1m2
 from read_rapidpe.transform import jacobian_m1m2_by_mceta
 
 
+def fixed_dblquad(f, xa, xb, ya, yb, order=500):
+    """
+    Fixed-order dblquad
+    Ref: https://stackoverflow.com/questions/42272817/is-it-possible-to-compute-double-integral-using-scipy-integrate-fixed-quad
+
+    Parameters
+    ----------
+    f(y, x) : callable
+        y must be the first argument and x the second argument.
+    xa, xb : float
+        The limits of integration in x: xa < xb
+    ya, yb : float
+        The limits of integration in y: ya < yb
+
+    """  # noqa: E501
+
+    def f_of_x(xs, n):
+        return np.array(
+            [integrate.fixed_quad(f, ya, yb, args=(x,), n=n)[0]
+                for x in np.array(xs)]
+            )
+
+    return integrate.fixed_quad(f_of_x, xa, xb, n=order, args=(order,))
+
+
 class Uniform_in_m1m2(object):
     def __init__(self, m_lower, m_upper):
         self.m_lower = m_lower
@@ -102,6 +127,12 @@ def _Z_in_m1m2(result, method="riemann-sum"):
 
         Z = integrate.dblquad(g, mc_min, mc_max, eta_min, eta_max,
                               epsrel=1e-2)  # FIXME: Is 1e-2 okay?
+        return Z[0]
+
+    elif method == "fixed-dblquad":
+        def g(eta, mc):  # g(y, x) for dblquad
+            return f(mc, eta)
+        Z = fixed_dblquad(g, mc_min, mc_max, eta_min, eta_max, order=500)
         return Z[0]
 
     else:
