@@ -4,6 +4,7 @@ Author: Cory Chu <cory@gwlab.page>
 """
 
 from pathlib import Path
+from joblib import Parallel, delayed
 import re
 import numpy as np
 from .grid_point import RapidPE_grid_point
@@ -15,6 +16,8 @@ from matplotlib.tri import LinearTriInterpolator, CubicTriInterpolator
 from scipy.interpolate import LinearNDInterpolator, NearestNDInterpolator
 from scipy.interpolate import CloughTocher2DInterpolator
 from scipy.stats import multinomial
+
+# import time  # for profiling
 
 
 def unique_with_tolerance(array, tolerance):
@@ -103,7 +106,8 @@ class RapidPE_result:
                      run_dir,
                      use_numpy=True,
                      use_ligolw=True,
-                     extrinsic_table=True):
+                     extrinsic_table=True,
+                     parallel_n=1):
         """
         Get result from a Rapid-PE run_dir
 
@@ -129,14 +133,16 @@ class RapidPE_result:
         return cls.from_xml_array(xml_array,
                                   use_numpy=use_numpy,
                                   use_ligolw=use_ligolw,
-                                  extrinsic_table=extrinsic_table)
+                                  extrinsic_table=extrinsic_table,
+                                  parallel_n=parallel_n)
 
     @classmethod
     def from_xml_array(cls,
                        xml_array,
                        use_numpy=True,
                        use_ligolw=True,
-                       extrinsic_table=True):
+                       extrinsic_table=True,
+                       parallel_n=1):
         """
         Get result from xml.gz files
 
@@ -171,27 +177,59 @@ class RapidPE_result:
         re_iter = re.compile(r"ILE_iteration_([0-9]+).+\.xml\.gz")
 
         # Read XML grid points
-        for i, filename in enumerate(xml_array):
-            grid_point = RapidPE_grid_point.from_xml(
-                filename,
-                use_numpy=use_numpy,
-                use_ligolw=use_ligolw,
-                extrinsic_table=extrinsic_table
-            )
+        if parallel_n == 1:
+            for i, filename in enumerate(xml_array):
+                grid_point = RapidPE_grid_point.from_xml(
+                    filename,
+                    use_numpy=use_numpy,
+                    use_ligolw=use_ligolw,
+                    extrinsic_table=extrinsic_table
+                )
 
-            # Append grid-points
-            result.grid_points[i] = grid_point
+                # Append grid-points
+                result.grid_points[i] = grid_point
 
-            # Append Intrinsic Parameters of grid-points
-            for attr in result._keys:
-                try:
-                    getattr(result, attr)[i] = \
-                        grid_point.intrinsic_table[attr][0]
-                except KeyError:
-                    pass
+                # Append Intrinsic Parameters of grid-points
+                for attr in result._keys:
+                    try:
+                        getattr(result, attr)[i] = \
+                            grid_point.intrinsic_table[attr][0]
+                    except KeyError:
+                        pass
 
-            # Append "iteration", i.e., grid-refinement-level
-            result.iteration[i] = int(re_iter.search(filename).group(1))
+                # Append "iteration", i.e., grid-refinement-level
+                result.iteration[i] = int(re_iter.search(filename).group(1))
+
+        # Parallel Reading XML files
+        else:
+            # t0 = time.time()
+            grid_points = Parallel(n_jobs=parallel_n)(
+                delayed(RapidPE_grid_point.from_xml)(
+                    filename,
+                    use_numpy=use_numpy,
+                    use_ligolw=use_ligolw,
+                    extrinsic_table=extrinsic_table
+                ) for filename in xml_array
+                )
+            # t1 = time.time()
+            for i, grid_point in enumerate(grid_points):
+                # Append grid-points
+                result.grid_points[i] = grid_point
+
+                # Append Intrinsic Parameters of grid-points
+                for attr in result._keys:
+                    try:
+                        getattr(result, attr)[i] = \
+                            grid_point.intrinsic_table[attr][0]
+                    except KeyError:
+                        pass
+
+                # Append "iteration", i.e., grid-refinement-level
+                filename = xml_array[i]
+                result.iteration[i] = int(re_iter.search(filename).group(1))
+            # t2 = time.time()
+            # print("parallel reading time: ", t1-t0)
+            # print("post-proccessing time: ", t2-t1)
 
         # Add chirp_mass and symmetric_mass_ratio
         if ("mass_1" in result._keys) and ("mass_2" in result._keys):
