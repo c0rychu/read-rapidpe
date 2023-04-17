@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "read-rapidpe"
-version = "0.1.0"
+version = "0.1.1"
 description = ""
 authors = ["Cory Chu <cory@gwlab.page>"]
 readme = "README.md"
