@@ -3,7 +3,14 @@ Read Rapid-PE
 
 This is a package to read Rapid-PE outputs.
 
-# Install (dev mode)
+# Install
+## Install from PyPI
+This `read-rapidpe` package is available on PyPI: https://pypi.org/project/read-rapidpe/
+```
+pip install read-rapidpe
+```
+
+## Install in dev mode
 ```
 git clone git@git.ligo.org:yu-kuang.chu/read-rapidpe.git
 cd read-rapidpe
@@ -11,18 +18,26 @@ pip install -e .
 ```
 
 # Example Usage
+## Reading files
+```python
+from read_rapidpe import RapidPE_result
+
+run_dir = "path/to/run_dir"
+result = RapidPE_result.from_run_dir(run_dir)
+```
+There are three optional arguments:
+- `use_ligolw` ( default = `True` ) : whether to use `ligo.lw` to read XML files.
+- `extrinsic_table` ( default = `True` ) : whether to load extrinsic parameter as well.
+- `parallel_n` ( default = `1` ) : number of parallel jobs when reading XML files.
+
+For example, one can do the following to speed up the reading process:
+```python
+result = RapidPE_result.from_run_dir(run_dir, use_ligolw=False, extrinsic_table=False, parallel_n=4)
+```
 
 ## Plot marginalized log-likelihood on m1-m2 grid points
 ```python
-from read_rapidpe import RapidPE_result
 import matplotlib.pyplot as plt
-import glob
-
-
-results_dir = "path/to/results"
-result_xml_files = glob.glob(results_dir+"*.xml.gz")
-result = RapidPE_result.from_xml_array(result_xml_files)
-
 
 # Plot marginalized-log-likelihood over intrinsic parameter (mass_1/mass_2) grid points
 plt.scatter(result.mass_1, result.mass_2, c=result.marg_log_likelihood )
@@ -33,15 +48,8 @@ plt.colorbar(label="$\ln(L_{marg})$")
 
 ## Plot interpolated likelihood
 ```python
-from read_rapidpe import RapidPE_result
 import matplotlib.pyplot as plt
-import glob
 import numpy as np
-
-
-results_dir = "path/to/results"
-result_xml_files = glob.glob(results_dir+"*.xml.gz")
-result = RapidPE_result.from_xml_array(result_xml_files)
 
 
 # Create Random m1, m2 samples
