@@ -6,6 +6,7 @@ Author: Cory Chu <cory@gwlab.page>
 import xml.etree.ElementTree as ET
 import gzip
 import numpy as np
+from pathlib import Path
 
 # For ligolw reading
 from ligo.lw import utils, lsctables, ligolw
@@ -25,7 +26,9 @@ class RapidPE_grid_point:
             self.intrinsic_table_raw = {}
             self.extrinsic_table = {}
             self.extrinsic_table_raw = {}
+            self.xml_filename = ""
         else:
+            self.xml_filename = grid_point.xml_filename
             self.intrinsic_table_raw = grid_point.intrinsic_table_raw
             self.extrinsic_table_raw = grid_point.extrinsic_table_raw
             self.intrinsic_table = {}
@@ -105,9 +108,12 @@ class RapidPE_grid_point:
         input_xml_gz = filename
 
         if use_ligolw:
+            # time-consuming, should open only once.
             cls.xmldoc = cls._open_ligolw(input_xml_gz)
 
         grid_point = cls()
+        grid_point.xml_filename = Path(input_xml_gz).stem
+
         grid_point.intrinsic_table_raw = cls._get_ligolw_table(
             input_xml_gz,
             tablename="sngl_inspiral:table",
