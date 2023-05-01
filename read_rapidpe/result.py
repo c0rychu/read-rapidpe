@@ -128,7 +128,7 @@ class RapidPE_result:
 
         """
         results_dir = Path(run_dir)/Path("results")
-        xml_array = [f.as_posix() for f in results_dir.glob("*.xml.gz")]
+        xml_array = [f.as_posix() for f in sorted(results_dir.glob("*.xml.gz"))]  # noqa: E501
 
         return cls.from_xml_array(xml_array,
                                   use_numpy=use_numpy,
