@@ -16,6 +16,8 @@ scipy = "^1.9.3"
 python-ligo-lw = "^1.8.3"
 joblib = "^1.2.0"
 lalsuite = "^7.14"
+h5py = "^3.8.0"
+pandas = "^2.0.1"
 
 
 [build-system]

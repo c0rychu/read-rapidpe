@@ -7,6 +7,8 @@ from pathlib import Path
 from joblib import Parallel, delayed
 import re
 import numpy as np
+import h5py
+import pandas as pd
 from .grid_point import RapidPE_grid_point
 from .transform import transform_m1m2_to_mceta, transform_mceta_to_m1m2
 from .transform import jacobian_mceta_by_m1m2
@@ -238,6 +240,46 @@ class RapidPE_result:
             result._keys.extend(["chirp_mass", "symmetric_mass_ratio"])
 
         return cls(result)
+
+    def to_hdf(self, hdf_filename, compression=False):
+        """
+        Save result to hdf file
+
+        Parameters
+        ----------
+        filename : str
+            The name of the hdf file
+
+        compression : str, optional (default: False)
+            The compression method, e.g., "gzip", "lzf".
+        """
+
+        with h5py.File(hdf_filename, 'w') as f:
+
+            # Cobine intrinsic parameters into "grid_points" dataset
+            result_df = pd.DataFrame({key: getattr(self, key) for key in self._keys})  # noqa: E501
+            result_np_rec_array = result_df.to_records(index=False)
+            f.create_dataset("grid_points", data=result_np_rec_array)
+
+            # Create "grid_points_raw" group to hold self.grid_points
+            group_grid_points_raw = \
+                f.create_group("grid_points_raw", track_order=True)
+
+            for i, gp in enumerate(self.grid_points):
+                group_gp = group_grid_points_raw.create_group(str(i))
+
+                # Add intrinsic_table
+                it = pd.DataFrame(gp.intrinsic_table).to_records(index=False)
+                group_gp.create_dataset("intrinsic_table", data=it)
+
+                # Add extrinsic_table
+                et = pd.DataFrame(gp.extrinsic_table).to_records(index=False)
+                group_gp.create_dataset("extrinsic_table",
+                                        data=et,
+                                        compression=compression)
+
+                # Add xml_filename
+                group_gp.attrs["xml_filename"] = gp.xml_filename
 
     def do_interpolate_marg_log_likelihood_m1m2(
             self,
