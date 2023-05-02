@@ -241,7 +241,7 @@ class RapidPE_result:
 
         return cls(result)
 
-    def to_hdf(self, hdf_filename, compression=False):
+    def to_hdf(self, hdf_filename, compression=None):
         """
         Save result to hdf file
 
@@ -250,7 +250,7 @@ class RapidPE_result:
         filename : str
             The name of the hdf file
 
-        compression : str, optional (default: False)
+        compression : str, optional (default: None)
             The compression method, e.g., "gzip", "lzf".
         """
 
@@ -258,8 +258,8 @@ class RapidPE_result:
 
             # Cobine intrinsic parameters into "grid_points" dataset
             result_df = pd.DataFrame({key: getattr(self, key) for key in self._keys})  # noqa: E501
-            result_np_rec_array = result_df.to_records(index=False)
-            f.create_dataset("grid_points", data=result_np_rec_array)
+            result_np = result_df.to_records(index=False)
+            f.create_dataset("grid_points", data=result_np)
 
             # Create "grid_points_raw" group to hold self.grid_points
             group_grid_points_raw = \
