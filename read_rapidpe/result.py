@@ -9,7 +9,7 @@ from joblib import Parallel, delayed
 import re
 import numpy as np
 import h5py
-import pandas as pd
+# import pandas as pd
 from .grid_point import RapidPE_grid_point
 from .transform import transform_m1m2_to_mceta, transform_mceta_to_m1m2
 from .transform import jacobian_mceta_by_m1m2
@@ -21,6 +21,14 @@ from scipy.interpolate import CloughTocher2DInterpolator
 from scipy.stats import multinomial
 
 # import time  # for profiling
+
+
+def dict_of_ndarray_to_recarray(dict_of_ndarray):
+    keys = dict_of_ndarray.keys()
+    names = ", ".join(keys)
+    return np.core.records.fromarrays(
+        [dict_of_ndarray[key] for key in keys], names=names
+        )
 
 
 def unique_with_tolerance(array, tolerance):
@@ -281,23 +289,26 @@ class RapidPE_result:
         with h5py.File(hdf_filename, 'w') as f:
 
             # Cobine intrinsic parameters into "grid_points" dataset
-            result_df = pd.DataFrame({key: getattr(self, key) for key in self._keys})  # noqa: E501
-            result_np = result_df.to_records(index=False)
-            f.create_dataset("grid_points", data=result_np)
+            # result_df = pd.DataFrame(self.intrinsic_table)
+            # result_np = result_df.to_records(index=False)
+            result_np = dict_of_ndarray_to_recarray(self.intrinsic_table)
+            f.create_dataset("intrinsic_table", data=result_np)
 
             # Create "grid_points_raw" group to hold self.grid_points
             group_grid_points_raw = \
-                f.create_group("grid_points_raw", track_order=True)
+                f.create_group("grid_points", track_order=True)
 
             for i, gp in enumerate(self.grid_points):
                 group_gp = group_grid_points_raw.create_group(str(i))
 
                 # Add intrinsic_table
-                it = pd.DataFrame(gp.intrinsic_table).to_records(index=False)
+                # it = pd.DataFrame(gp.intrinsic_table).to_records(index=False)
+                it = dict_of_ndarray_to_recarray(gp.intrinsic_table)
                 group_gp.create_dataset("intrinsic_table", data=it)
 
                 # Add extrinsic_table
-                et = pd.DataFrame(gp.extrinsic_table).to_records(index=False)
+                # et = pd.DataFrame(gp.extrinsic_table).to_records(index=False)
+                et = dict_of_ndarray_to_recarray(gp.extrinsic_table)
                 group_gp.create_dataset("extrinsic_table",
                                         data=et,
                                         compression=compression)
