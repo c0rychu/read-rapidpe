@@ -137,6 +137,46 @@ class RapidPE_result:
         return self.__copy__()
 
     @classmethod
+    def from_hdf(cls, hdf_file, extrinsic_table=True):
+        """
+        Get result from a Rapid-PE HDF file
+
+        Example
+        -------
+            result = RapidPE_result.from_hdf("path/to/hdf_file")
+
+        Attributes
+        ----------
+        hdf_file : string
+            The path to Rapid-PE HDF file
+
+        extrinsic_table : bool
+            Whether loading extrinsic_table as well
+
+        """
+        result = cls()
+        with h5py.File(hdf_file, "r") as f:
+            gps = f["grid_points"]
+            N = len(gps)
+            result.grid_points = np.empty(N, dtype=object)
+            for i, gp in enumerate(gps.values()):
+                result.grid_points[i] = \
+                    RapidPE_grid_point.from_hdf_grid_point_group(
+                        hdf_gp_group=gp,
+                        extrinsic_table=extrinsic_table
+                        )
+            it = f["intrinsic_table"]
+            result.intrinsic_table = {key: it[key] for key in it.dtype.names}
+            result._keys = list(it.dtype.names)
+            for attr in result._keys:
+                try:
+                    setattr(result, attr, result.intrinsic_table[attr])
+                except KeyError:
+                    pass
+
+        return cls(result)
+
+    @classmethod
     def from_run_dir(cls,
                      run_dir,
                      use_numpy=True,

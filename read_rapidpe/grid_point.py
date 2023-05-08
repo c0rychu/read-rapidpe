@@ -23,19 +23,21 @@ class RapidPE_grid_point:
     def __init__(self, grid_point=None):
         if grid_point is None:
             self.intrinsic_table = {}
-            self.intrinsic_table_raw = {}
             self.extrinsic_table = {}
-            self.extrinsic_table_raw = {}
             self.xml_filename = ""
         else:
             self.xml_filename = grid_point.xml_filename
-            self.intrinsic_table_raw = grid_point.intrinsic_table_raw
-            self.extrinsic_table_raw = grid_point.extrinsic_table_raw
-            self.intrinsic_table = {}
-            self._set_intrinsic_table()
-            self.extrinsic_table = {}
-            self._set_extrinsic_table()
-            self._fix_intrinsic_table_spin()  # a temporary solution
+            if hasattr(grid_point, "intrinsic_table_raw"):
+                self.intrinsic_table_raw = grid_point.intrinsic_table_raw
+                self.extrinsic_table_raw = grid_point.extrinsic_table_raw
+                self.intrinsic_table = {}
+                self._set_intrinsic_table()
+                self.extrinsic_table = {}
+                self._set_extrinsic_table()
+                self._fix_intrinsic_table_spin()  # a temporary solution
+            else:
+                self.intrinsic_table = grid_point.intrinsic_table
+                self.extrinsic_table = grid_point.extrinsic_table
 
     def _set_intrinsic_table(self):
         # Maps are "rapidpe_name": "canonical_name"
@@ -96,6 +98,28 @@ class RapidPE_grid_point:
                     = self.extrinsic_table_raw[key]
             except KeyError:
                 pass
+
+    @classmethod
+    def from_hdf_grid_point_group(cls,
+                                  hdf_gp_group,
+                                  extrinsic_table=True):
+        """
+        Read the i-th grid point from HDF5 group "/grid_points/i"
+        """
+        grid_point = cls()
+        grid_point.xml_filename = hdf_gp_group.attrs["xml_filename"]
+
+        it = hdf_gp_group["intrinsic_table"][:]
+        grid_point.intrinsic_table = {key: it[key] for key in it.dtype.names}
+
+        if extrinsic_table:
+            try:
+                et = hdf_gp_group["extrinsic_table"][:]
+                grid_point.extrinsic_table = \
+                    {key: et[key] for key in et.dtype.names}
+            except KeyError:
+                pass
+        return cls(grid_point)
 
     @classmethod
     def from_xml(cls,
