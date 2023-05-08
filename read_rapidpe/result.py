@@ -99,6 +99,13 @@ class RapidPE_result:
             # ...
 
     @cached_property
+    def intrinsic_table(self):
+        """
+        Combine intrinsic tables to a single padas.DataFrame
+        """
+        return pd.DataFrame({key: getattr(self, key) for key in self._keys})
+
+    @cached_property
     def extrinsic_samples(self):
         """
         Combine extrinsic samples to a single padas.DataFrame
