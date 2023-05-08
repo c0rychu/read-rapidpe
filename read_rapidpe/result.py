@@ -24,6 +24,7 @@ from scipy.stats import multinomial
 
 
 def dict_of_ndarray_to_recarray(dict_of_ndarray):
+    # return pd.DataFrame(dict_of_ndarray).to_records(index=False)
     keys = dict_of_ndarray.keys()
     names = ", ".join(keys)
     return np.core.records.fromarrays(
@@ -286,15 +287,13 @@ class RapidPE_result:
             The compression method, e.g., "gzip", "lzf".
         """
 
-        with h5py.File(hdf_filename, 'w') as f:
+        with h5py.File(hdf_filename, 'w', track_order=True) as f:
 
-            # Cobine intrinsic parameters into "grid_points" dataset
-            # result_df = pd.DataFrame(self.intrinsic_table)
-            # result_np = result_df.to_records(index=False)
-            result_np = dict_of_ndarray_to_recarray(self.intrinsic_table)
-            f.create_dataset("intrinsic_table", data=result_np)
+            # Check if there is extrinsic_table
+            gp = self.grid_points[0]
+            extrinsic_table = True if len(gp.extrinsic_table) > 0 else False
 
-            # Create "grid_points_raw" group to hold self.grid_points
+            # Create "grid_points" group to hold self.grid_points
             group_grid_points_raw = \
                 f.create_group("grid_points", track_order=True)
 
@@ -302,19 +301,39 @@ class RapidPE_result:
                 group_gp = group_grid_points_raw.create_group(str(i))
 
                 # Add intrinsic_table
-                # it = pd.DataFrame(gp.intrinsic_table).to_records(index=False)
                 it = dict_of_ndarray_to_recarray(gp.intrinsic_table)
                 group_gp.create_dataset("intrinsic_table", data=it)
 
                 # Add extrinsic_table
-                # et = pd.DataFrame(gp.extrinsic_table).to_records(index=False)
-                et = dict_of_ndarray_to_recarray(gp.extrinsic_table)
-                group_gp.create_dataset("extrinsic_table",
-                                        data=et,
-                                        compression=compression)
+                if extrinsic_table:
+                    et = dict_of_ndarray_to_recarray(gp.extrinsic_table)
+                    group_gp.create_dataset("extrinsic_table",
+                                            data=et,
+                                            compression=compression)
 
                 # Add xml_filename
                 group_gp.attrs["xml_filename"] = gp.xml_filename
+
+            # Combine intrinsic parameters into "intrinsic_table" dataset
+            result_np = dict_of_ndarray_to_recarray(self.intrinsic_table)
+            f.create_dataset("intrinsic_table", data=result_np)
+
+            # Create virtual dataset for "extrinsic_samples"
+            if extrinsic_table:
+                gps = f["grid_points"]
+                ds0 = f["grid_points/0/extrinsic_table"]
+                n_samples = np.array(
+                    [gp["extrinsic_table"].shape[0] for gp in gps.values()])
+                n_samples = np.cumsum(n_samples)
+                n_samples = np.concatenate([[0], n_samples])
+                layout = h5py.VirtualLayout(shape=(n_samples[-1], ),
+                                            dtype=ds0.dtype)
+
+                for i, gp in enumerate(gps.values()):
+                    vsource = h5py.VirtualSource(gp["extrinsic_table"])
+                    layout[n_samples[i]:n_samples[i+1]] = vsource
+
+                f.create_virtual_dataset('extrinsic_samples', layout)
 
     def do_interpolate_marg_log_likelihood_m1m2(
             self,
