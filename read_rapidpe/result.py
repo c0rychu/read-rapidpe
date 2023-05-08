@@ -3,6 +3,7 @@ Read and parse RapidPE output result for post-processing.
 Author: Cory Chu <cory@gwlab.page>
 """
 
+from functools import cached_property
 from pathlib import Path
 from joblib import Parallel, delayed
 import re
@@ -96,6 +97,14 @@ class RapidPE_result:
             # self.spin_2z = result.spin_2z
             # self.marg_log_likelihood = result.marg_log_likelihood
             # ...
+
+    @cached_property
+    def extrinsic_samples(self):
+        """
+        Combine extrinsic samples to a single padas.DataFrame
+        """
+        return pd.concat(
+             [pd.DataFrame(gp.extrinsic_table) for gp in self.grid_points])
 
     def __copy__(self):
         return RapidPE_result(self)
