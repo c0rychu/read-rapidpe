@@ -103,15 +103,23 @@ class RapidPE_result:
         """
         Combine intrinsic tables to a single padas.DataFrame
         """
-        return pd.DataFrame({key: getattr(self, key) for key in self._keys})
+        # return pd.DataFrame({key: getattr(self, key) for key in self._keys})
+        return {key: getattr(self, key) for key in self._keys}
 
     @cached_property
     def extrinsic_samples(self):
         """
         Combine extrinsic samples to a single padas.DataFrame
         """
-        return pd.concat(
-             [pd.DataFrame(gp.extrinsic_table) for gp in self.grid_points])
+        # return pd.concat(
+        #      [pd.DataFrame(gp.extrinsic_table) for gp in self.grid_points])
+        gps = self.grid_points
+        keys_ext = gps[0].extrinsic_table.keys()
+        extrinsic_samples = {}
+        for key in keys_ext:
+            extrinsic_samples[key] = \
+                np.concatenate([gp.extrinsic_table[key] for gp in gps])
+        return extrinsic_samples
 
     def __copy__(self):
         return RapidPE_result(self)
