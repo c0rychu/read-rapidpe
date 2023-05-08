@@ -39,6 +39,7 @@ class RapidPE_grid_point:
 
     def _set_intrinsic_table(self):
         # Maps are "rapidpe_name": "canonical_name"
+        # Ref: https://lscsoft.docs.ligo.org/pesummary/stable_docs/gw/parameters.html  # noqa E501
         intrinsic_parameter_map = {
                                     "mass1": "mass_1",
                                     "mass2": "mass_2",
@@ -71,6 +72,8 @@ class RapidPE_grid_point:
 
     def _set_extrinsic_table(self):
         # Maps are "rapidpe_name": "canonical_name"
+        # Ref: https://lscsoft.docs.ligo.org/pesummary/stable_docs/gw/parameters.html  # noqa E501
+        # sampling_function is the p_s in Eq.28 of https://arxiv.org/pdf/1502.04370.pdf  # noqa E501
         extrinsic_parameter_map = {
                                     "mass1": "mass_1",
                                     "mass2": "mass_2",
@@ -81,6 +84,7 @@ class RapidPE_grid_point:
                                     "longitude": "ra",
                                     "inclination": "iota",
                                     "polarization": "psi",
+                                    "coa_phase": "coa_phase",
                                     "alpha1": "log_likelihood",
                                     "alpha2": "prior",
                                     "alpha3": "sampling_function",
