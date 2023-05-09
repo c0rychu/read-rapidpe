@@ -110,14 +110,16 @@ class RapidPE_grid_point:
         grid_point.xml_filename = hdf_gp_group.attrs["xml_filename"]
 
         it = hdf_gp_group["intrinsic_table"][:]
-        grid_point.intrinsic_table = {key: it[key] for key in it.dtype.names}
+        grid_point.intrinsic_table = \
+            {key: it[key] for key in it.dtype.names}
 
         if extrinsic_table:
             try:
                 et = hdf_gp_group["extrinsic_table"][:]  # not conti. in mem.
                 # et = hdf_gp_group["extrinsic_table"]  # mem. conti. but slow
                 grid_point.extrinsic_table = \
-                    {key: et[key].copy() for key in et.dtype.names}
+                    {key: np.ascontiguousarray(et[key]) for key in et.dtype.names}  # noqa E501
+
             except KeyError:
                 pass
         return cls(grid_point)
