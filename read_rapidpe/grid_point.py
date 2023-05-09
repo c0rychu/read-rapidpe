@@ -114,7 +114,8 @@ class RapidPE_grid_point:
 
         if extrinsic_table:
             try:
-                et = hdf_gp_group["extrinsic_table"][:]
+                # et = hdf_gp_group["extrinsic_table"][:] # not conti. in mem.
+                et = hdf_gp_group["extrinsic_table"]  # make it conti. in mem.
                 grid_point.extrinsic_table = \
                     {key: et[key] for key in et.dtype.names}
             except KeyError:
