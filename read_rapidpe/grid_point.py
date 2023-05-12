@@ -10,7 +10,11 @@ from pathlib import Path
 
 # For ligolw reading
 from ligo.lw import utils, lsctables, ligolw
-lsctables.use_in(ligolw.LIGOLWContentHandler)
+
+
+@lsctables.use_in
+class LIGOLWContentHandler(ligolw.LIGOLWContentHandler):
+    pass
 
 
 class RapidPE_grid_point:
@@ -29,15 +33,19 @@ class RapidPE_grid_point:
             self.xml_filename = grid_point.xml_filename
             if hasattr(grid_point, "intrinsic_table_raw"):
                 self.intrinsic_table_raw = grid_point.intrinsic_table_raw
-                self.extrinsic_table_raw = grid_point.extrinsic_table_raw
                 self.intrinsic_table = {}
                 self._set_intrinsic_table()
-                self.extrinsic_table = {}
-                self._set_extrinsic_table()
-                self._fix_intrinsic_table_spin()  # a temporary solution
             else:
                 self.intrinsic_table = grid_point.intrinsic_table
+
+            if hasattr(grid_point, "extrinsic_table_raw"):
+                self.extrinsic_table_raw = grid_point.extrinsic_table_raw
+                self.extrinsic_table = {}
+                self._set_extrinsic_table()
+            else:
                 self.extrinsic_table = grid_point.extrinsic_table
+
+            self._fix_intrinsic_table_spin()  # a temporary solution
 
     def _set_intrinsic_table(self):
         # Maps are "rapidpe_name": "canonical_name"
@@ -168,7 +176,7 @@ class RapidPE_grid_point:
     @classmethod
     def _open_ligolw(cls, xmlfile: str):
         xmldoc = utils.load_filename(
-            xmlfile, contenthandler=ligolw.LIGOLWContentHandler
+            xmlfile, contenthandler=LIGOLWContentHandler
             )
         return xmldoc
 
