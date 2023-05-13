@@ -48,17 +48,38 @@ class RapidPE_grid_point:
             self._fix_intrinsic_table_spin()  # a temporary solution
 
     def _set_intrinsic_table(self):
+        """
         # Maps are "rapidpe_name": "canonical_name"
-        # Ref: https://lscsoft.docs.ligo.org/pesummary/stable_docs/gw/parameters.html  # noqa E501
+
+        canonical_name
+        ==============
+        Ref: https://lscsoft.docs.ligo.org/pesummary/stable_docs/gw/parameters.html
+        
+        rapidpe_name
+        ============
+        tau0 :
+            n_eff
+            TODO: is this same as the n_eff in Eq.33 of https://arxiv.org/pdf/1502.04370.pdf?
+            According to RIFT: Total number of effective samples to collect before termination
+        tau3 :
+            converged
+        ttotal :
+            n_total
+
+        Other parameters are defined in the dict_out in ILE:
+        Ref: https://git.ligo.org/rapidpe-rift/rift/-/blob/master/MonteCarloMarginalizeCode/Code/bin/integrate_likelihood_extrinsic_batchmode#L1637
+        and in the likelihood_to_snglinsp_row() in RIFT's xmlutils.py
+        Ref: https://git.ligo.org/rapidpe-rift/rift/-/blob/master/MonteCarloMarginalizeCode/Code/RIFT/misc/xmlutils.py#L134-143
+        """  # noqa E501
         intrinsic_parameter_map = {
                                     "mass1": "mass_1",
                                     "mass2": "mass_2",
                                     "spin1z": "spin_1z",
                                     "spin2z": "spin_2z",
                                     "snr": "marg_log_likelihood",
-                                    "tau0": "tau0",
-                                    "tau3": "tau3",
                                     "alpha4": "eccentricity",
+                                    "tau0": "n_eff",
+                                    "ttotal": "n_total",
                                 }
         for key in intrinsic_parameter_map:
             try:
@@ -81,9 +102,21 @@ class RapidPE_grid_point:
                 self.extrinsic_table["spin_2z"][0:1]
 
     def _set_extrinsic_table(self):
-        # Maps are "rapidpe_name": "canonical_name"
-        # Ref: https://lscsoft.docs.ligo.org/pesummary/stable_docs/gw/parameters.html  # noqa E501
-        # sampling_function is the p_s in Eq.28 of https://arxiv.org/pdf/1502.04370.pdf  # noqa E501
+        """
+        Maps are "rapidpe_name": "canonical_name"
+
+        canonical_name
+        ==============
+        Ref: https://lscsoft.docs.ligo.org/pesummary/stable_docs/gw/parameters.html
+        
+        rapidpe_name
+        ============
+        sampling_function :
+            the p_s in Eq.28 of https://arxiv.org/pdf/1502.04370.pdf 
+
+        Other parameters are defined in the CMAP in RIFT's xmlutils.py
+        Red: https://git.ligo.org/rapidpe-rift/rift/-/blob/master/MonteCarloMarginalizeCode/Code/RIFT/misc/xmlutils.py#L20-51
+        """  # noqa E501
         extrinsic_parameter_map = {
                                     "mass1": "mass_1",
                                     "mass2": "mass_2",
@@ -95,9 +128,14 @@ class RapidPE_grid_point:
                                     "inclination": "iota",
                                     "polarization": "psi",
                                     "coa_phase": "coa_phase",
+                                    "alpha4": "eccentricity",
                                     "alpha1": "log_likelihood",
                                     "alpha2": "prior",
                                     "alpha3": "sampling_function",
+                                    "spin1x": "spin_1x",
+                                    "spin2x": "spin_2x",
+                                    "spin1y": "spin_1y",
+                                    "spin2y": "spin_2y",
                                 }
         self.extrinsic_table = {}
         for key in extrinsic_parameter_map:
