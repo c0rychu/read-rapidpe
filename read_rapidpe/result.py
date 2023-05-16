@@ -11,6 +11,8 @@ import numpy as np
 import h5py
 # import pandas as pd
 from .grid_point import RapidPE_grid_point
+from .metadata_parser import load_event_info_dict_txt
+from .metadata_parser import load_injection_info_txt
 from .transform import transform_m1m2_to_mceta, transform_mceta_to_m1m2
 from .transform import jacobian_mceta_by_m1m2
 
@@ -94,7 +96,7 @@ class RapidPE_result:
             self.grid_points = result.grid_points
             self._keys = result._keys
 
-            for attr in result._keys:
+            for attr in result._keys + ["event_info", "injection_info"]:
                 try:
                     setattr(self, attr, getattr(result, attr))
                 except AttributeError:
@@ -202,14 +204,30 @@ class RapidPE_result:
             Whether loading extrinsic_table as well
 
         """
+        run_dir = Path(run_dir)
         results_dir = Path(run_dir)/Path("results")
         xml_array = [f.as_posix() for f in sorted(results_dir.glob("*.xml.gz"))]  # noqa: E501
 
-        return cls.from_xml_array(xml_array,
-                                  use_numpy=use_numpy,
-                                  use_ligolw=use_ligolw,
-                                  extrinsic_table=extrinsic_table,
-                                  parallel_n=parallel_n)
+        result = cls.from_xml_array(xml_array,
+                                    use_numpy=use_numpy,
+                                    use_ligolw=use_ligolw,
+                                    extrinsic_table=extrinsic_table,
+                                    parallel_n=parallel_n)
+
+        event_info_dict_txt = run_dir / "event_info_dict.txt"
+        injection_info_txt = run_dir / "injection_info.txt"
+
+        try:
+            result.event_info = load_event_info_dict_txt(event_info_dict_txt)
+        except FileNotFoundError:
+            pass
+
+        try:
+            result.injection_info = load_injection_info_txt(injection_info_txt)
+        except FileNotFoundError:
+            pass
+
+        return result
 
     @classmethod
     def from_xml_array(cls,

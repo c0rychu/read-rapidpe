@@ -63,3 +63,13 @@ def load_event_info_dict_txt(txtfile):
             event_info[key] = float(event_info[key])
 
     return event_info
+
+
+def load_injection_info_txt(txtfile):
+    """
+    Load injection_info.txt file into python dict
+    """
+    with open(txtfile, "r") as f:
+        injection_info = json.load(f)
+    fix_param_naming(injection_info)
+    return injection_info
