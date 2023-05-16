@@ -85,7 +85,7 @@ class RapidPE_result:
 
     def __init__(self, result=None):
         if result is None:
-            self.grid_points = []  # FIXME: it's actually a np.array
+            self.grid_points = np.empty(0, dtype=object)
             self._keys = []
         else:
             self.grid_points = result.grid_points
@@ -107,7 +107,7 @@ class RapidPE_result:
     @cached_property
     def intrinsic_table(self):
         """
-        Combine intrinsic tables to a single padas.DataFrame
+        Combine intrinsic tables to a single dict
         """
         # return pd.DataFrame({key: getattr(self, key) for key in self._keys})
         return {key: getattr(self, key) for key in self._keys}
@@ -115,7 +115,7 @@ class RapidPE_result:
     @cached_property
     def extrinsic_samples(self):
         """
-        Combine extrinsic samples to a single padas.DataFrame
+        Combine extrinsic samples to a single dict
         """
         # return pd.concat(
         #      [pd.DataFrame(gp.extrinsic_table) for gp in self.grid_points])
@@ -153,6 +153,7 @@ class RapidPE_result:
         """
         result = cls()
         with h5py.File(hdf_file, "r") as f:
+            # Load grid_points
             gps = f["grid_points"]
             N = len(gps)
             result.grid_points = np.empty(N, dtype=object)
@@ -162,8 +163,12 @@ class RapidPE_result:
                         hdf_gp_group=gp,
                         extrinsic_table=extrinsic_table
                         )
+
+            # Load intrinsic_table
             it = f["intrinsic_table"]
             result.intrinsic_table = {key: it[key] for key in it.dtype.names}
+
+            # Load other attributes
             result._keys = list(it.dtype.names)
             for attr in result._keys:
                 try:
@@ -332,6 +337,8 @@ class RapidPE_result:
             result.chirp_mass, result.symmetric_mass_ratio = \
                 transform_m1m2_to_mceta(result.mass_1, result.mass_2)
             result._keys.extend(["chirp_mass", "symmetric_mass_ratio"])
+
+            # TODO: Addn mass_ratio q
 
         return cls(result)
 

@@ -11,6 +11,12 @@ def dict_value_to_float(input_dict):
 
 
 def unpack_dict_list_string(dict_list_string, is_float=False):
+    """
+    Unpack string of dict list into python dict
+
+    Example:
+        '["mass1=1.1","mass2=2.2"]' -> {"mass1": 1.1, "mass2": 2.2}
+    """
     items = ast.literal_eval(dict_list_string)
     items = {item.split("=")[0]: item.split("=")[1] for item in items}
     if is_float:
@@ -20,6 +26,12 @@ def unpack_dict_list_string(dict_list_string, is_float=False):
 
 
 def fix_param_naming(input_dict):
+    """
+    Fix parameter naming of keys in dict to follow pesummary convention
+
+    Example:
+        {mass1: 0.5} -> {mass_1: 0.5}
+    """
     keymap = {
         "mass1": "mass_1",
         "mass2": "mass_2",
@@ -82,6 +94,9 @@ def load_injection_info_txt(txtfile):
 # ======================
 
 def dict_of_ndarray_to_recarray(dict_of_ndarray):
+    """
+    Convert dict of ndarray to numpy record-array
+    """
     # return pd.DataFrame(dict_of_ndarray).to_records(index=False)
     keys = dict_of_ndarray.keys()
     names = ", ".join(keys)
@@ -91,6 +106,9 @@ def dict_of_ndarray_to_recarray(dict_of_ndarray):
 
 
 def dict_to_hdf_group(input_dict, hdf_group):
+    """
+    Save nested python dict to existing hdf5 group
+    """
     for key, val in input_dict.items():
         if isinstance(val, dict):
             g = hdf_group.create_group(key)
@@ -100,6 +118,9 @@ def dict_to_hdf_group(input_dict, hdf_group):
 
 
 def dict_from_hdf_group(hdf_group):
+    """
+    Recursively load hdf5 group into nested python dict
+    """
     output_dict = {}
     for key, val in hdf_group.items():
         # if isinstance(val, h5py._hl.group.Group):
