@@ -11,8 +11,12 @@ import numpy as np
 import h5py
 # import pandas as pd
 from .grid_point import RapidPE_grid_point
-from .metadata_parser import load_event_info_dict_txt
-from .metadata_parser import load_injection_info_txt
+from .io import load_event_info_dict_txt
+from .io import load_injection_info_txt
+from .io import dict_of_ndarray_to_recarray
+from .io import dict_from_hdf_group
+from .io import dict_to_hdf_group
+
 from .transform import transform_m1m2_to_mceta, transform_mceta_to_m1m2
 from .transform import jacobian_mceta_by_m1m2
 
@@ -23,15 +27,6 @@ from scipy.interpolate import CloughTocher2DInterpolator
 from scipy.stats import multinomial
 
 # import time  # for profiling
-
-
-def dict_of_ndarray_to_recarray(dict_of_ndarray):
-    # return pd.DataFrame(dict_of_ndarray).to_records(index=False)
-    keys = dict_of_ndarray.keys()
-    names = ", ".join(keys)
-    return np.core.records.fromarrays(
-        [dict_of_ndarray[key] for key in keys], names=names
-        )
 
 
 def unique_with_tolerance(array, tolerance):
@@ -173,6 +168,14 @@ class RapidPE_result:
             for attr in result._keys:
                 try:
                     setattr(result, attr, result.intrinsic_table[attr])
+                except KeyError:
+                    pass
+
+            # Load event_info and injection_info
+            for attr in ["event_info", "injection_info"]:
+                try:
+                    x = dict_from_hdf_group(f[attr])
+                    setattr(result, attr, x)
                 except KeyError:
                     pass
 
@@ -392,6 +395,15 @@ class RapidPE_result:
                     layout[n_samples[i]:n_samples[i+1]] = vsource
 
                 f.create_virtual_dataset('extrinsic_samples', layout)
+
+            # Save event_info and injection_info
+            for attr in ["event_info", "injection_info"]:
+                try:
+                    x = getattr(self, attr)
+                    g = f.create_group(attr)
+                    dict_to_hdf_group(x, g)
+                except AttributeError:
+                    pass
 
     def do_interpolate_marg_log_likelihood_m1m2(
             self,

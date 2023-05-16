@@ -1,5 +1,7 @@
 import ast
 import json
+import h5py
+import numpy as np
 
 
 def dict_value_to_float(input_dict):
@@ -73,3 +75,40 @@ def load_injection_info_txt(txtfile):
         injection_info = json.load(f)
     fix_param_naming(injection_info)
     return injection_info
+
+
+# ======================
+# For HDF5 I/O
+# ======================
+
+def dict_of_ndarray_to_recarray(dict_of_ndarray):
+    # return pd.DataFrame(dict_of_ndarray).to_records(index=False)
+    keys = dict_of_ndarray.keys()
+    names = ", ".join(keys)
+    return np.core.records.fromarrays(
+        [dict_of_ndarray[key] for key in keys], names=names
+        )
+
+
+def dict_to_hdf_group(input_dict, hdf_group):
+    for key, val in input_dict.items():
+        if isinstance(val, dict):
+            g = hdf_group.create_group(key)
+            dict_to_hdf_group(val, g)
+        else:
+            hdf_group.create_dataset(key, data=val)
+
+
+def dict_from_hdf_group(hdf_group):
+    output_dict = {}
+    for key, val in hdf_group.items():
+        # if isinstance(val, h5py._hl.group.Group):
+        if isinstance(val, h5py.Group):
+            output_dict[key] = dict_from_hdf_group(val)
+        else:
+            val = val[()]
+            if isinstance(val, bytes):
+                val = val.decode()
+            output_dict[key] = val
+
+    return output_dict
