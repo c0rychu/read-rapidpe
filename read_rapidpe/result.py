@@ -480,6 +480,10 @@ class RapidPE_result:
             'method= "cubic", "linear", "linear-scipy", "nearest-scipy",' \
             '"cubic-scipy", "gaussian", or "gaussian-renormalized"'
 
+        grid = Mass_Spin.from_m1m2(self.mass_1, self.mass_2)
+        grid_coord_1 = grid[self.grid_coordinates[0]]
+        grid_coord_2 = grid[self.grid_coordinates[1]]
+
         if method == "gaussian" or method == "gaussian-renormalized":
             # def gaussian_log_likelihood(m1, m2):
             #     mc_arr, eta_arr = transform_m1m2_to_mceta(m1, m2)
@@ -581,21 +585,24 @@ class RapidPE_result:
         elif "scipy" in method:
             if method == "linear-scipy":
                 f = LinearNDInterpolator(
-                    list(zip(self.chirp_mass, self.symmetric_mass_ratio)),
+                    # list(zip(self.chirp_mass, self.symmetric_mass_ratio)),
+                    list(zip(grid_coord_1, grid_coord_2)),
                     self.marg_log_likelihood,
                     rescale=True,
                     fill_value=-100  # FIXME: is -100 okay?
                     )
             elif method == "cubic-scipy":
                 f = CloughTocher2DInterpolator(
-                    list(zip(self.chirp_mass, self.symmetric_mass_ratio)),
+                    # list(zip(self.chirp_mass, self.symmetric_mass_ratio)),
+                    list(zip(grid_coord_1, grid_coord_2)),
                     self.marg_log_likelihood,
                     rescale=True,
                     fill_value=-100  # FIXME: is -100 okay?
                     )
             elif method == "nearest-scipy":
                 f = NearestNDInterpolator(
-                    list(zip(self.chirp_mass, self.symmetric_mass_ratio)),
+                    # list(zip(self.chirp_mass, self.symmetric_mass_ratio)),
+                    list(zip(grid_coord_1, grid_coord_2)),
                     self.marg_log_likelihood,
                     rescale=True
                     )
@@ -603,13 +610,20 @@ class RapidPE_result:
                 raise ValueError(_supported_methods)
 
             def log_likelihood(m1, m2):
-                mc, eta = transform_m1m2_to_mceta(m1, m2)
-                ll = f(mc, eta)
+                # mc, eta = transform_m1m2_to_mceta(m1, m2)
+                # ll = f(mc, eta)
+                x = Mass_Spin.from_m1m2(m1, m2)
+                x1 = x[self.grid_coordinates[0]]
+                x2 = x[self.grid_coordinates[1]]
+                ll = f(x1, x2)
                 return ll
 
             self.log_likelihood = log_likelihood
 
         else:
+            raise DeprecationWarning(_supported_methods)
+            # TODO: remove methods uisng matplotlib triangulation
+
             triangles = Triangulation(self.chirp_mass,
                                       self.symmetric_mass_ratio)
 

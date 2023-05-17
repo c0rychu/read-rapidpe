@@ -18,6 +18,9 @@ class Mass_Spin:
             self._spin_1z = obj._spin_1z
             self._spin_2z = obj._spin_2z
 
+    def __getitem__(self, key):
+        return getattr(self, key)
+
     @classmethod
     def from_m1m2s1zs2z(cls, mass_1, mass_2, spin_1z, spin_2z):
         obj = cls()
