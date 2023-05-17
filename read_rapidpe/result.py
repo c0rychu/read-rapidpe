@@ -205,7 +205,7 @@ class RapidPE_result:
                     pass
 
             # Load event_info and injection_info
-            for attr in ["event_info", "injection_info"]:
+            for attr in ["event_info", "injection_info", "config_info"]:
                 try:
                     x = dict_from_hdf_group(f[attr])
                     setattr(result, attr, x)
@@ -445,7 +445,7 @@ class RapidPE_result:
                 f.create_virtual_dataset('extrinsic_samples', layout)
 
             # Save event_info and injection_info
-            for attr in ["event_info", "injection_info"]:
+            for attr in ["event_info", "injection_info", "config_info"]:
                 try:
                     x = getattr(self, attr)
                     g = f.create_group(attr)
