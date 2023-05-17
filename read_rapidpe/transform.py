@@ -42,6 +42,14 @@ class Mass_Spin:
         obj._mass_2 = m2
         return obj
 
+    @classmethod
+    def from_mcq(cls, mc, q):
+        obj = cls()
+        m1, m2 = cls.mcq_to_m1m2(mc, q)
+        obj._mass_1 = m1
+        obj._mass_2 = m2
+        return obj
+
     @property
     def mass_1(self):
         return self._mass_1
