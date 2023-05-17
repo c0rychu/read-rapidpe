@@ -664,6 +664,7 @@ class RapidPE_result:
             # sigma_eta = grid_separation_min(self.symmetric_mass_ratio) * 0.5
             # cov = np.diag([sigma_mc**2, sigma_eta**2])
 
+            # FIXME: use grid_coordinates instead of hard-coded
             # Compute covariance matrix for different grid levels
             grid_levels = np.unique(self.iteration)
             cov = {}
