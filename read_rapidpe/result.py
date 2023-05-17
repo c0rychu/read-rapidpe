@@ -95,7 +95,7 @@ class RapidPE_result:
 
             for attr in result._keys + ["event_info",
                                         "injection_info",
-                                        "grid_coordinates"]:
+                                        "config_info"]:
                 try:
                     setattr(self, attr, getattr(result, attr))
                 except AttributeError:
@@ -107,6 +107,30 @@ class RapidPE_result:
             # self.spin_2z = result.spin_2z
             # self.marg_log_likelihood = result.marg_log_likelihood
             # ...
+
+    @property
+    def grid_coordinates(self):
+        """
+        List of grid coordinates in wich the grid points are rectilinear
+        """
+        iparam_search = self.config_info["intrinsic_param_to_search"]
+        distant_coord = self.config_info["distance_coordinates"]
+        if iparam_search == "[mass1,mass2]":
+            if distant_coord == "mchirp_q":
+                return ["chirp_mass", "mass_ratio"]
+            elif distant_coord == "mchirp_eta":
+                return ["chirp_mass", "symmetric_mass_ratio"]
+            else:
+                raise NotImplementedError("distance_coordinates not supported")
+        elif iparam_search == "[mass2,mass2,spin1z,spin2z]":
+            if distant_coord == "mchirp_q":
+                return ["chirp_mass", "mass_ratio", "chi_eff", "chi_a"]
+            elif distant_coord == "mchirp_eta":
+                return ["chirp_mass", "symmetric_mass_ratio", "chi_eff", "chi_a"]  # noqa E501
+            else:
+                raise NotImplementedError("distance_coordinates not supported")
+        else:
+            raise NotImplementedError("intrinsic_param_to_search not supported")  # noqa E501
 
     @cached_property
     def intrinsic_table(self):
@@ -243,8 +267,11 @@ class RapidPE_result:
         try:
             config = ConfigParser()
             config.read(config_ini)
-            result.grid_coordinates = \
-                config["GridRefine"]["distance-coordinates"]
+            result.config_info = \
+                {"distance_coordinates":
+                    config["GridRefine"]["distance-coordinates"],
+                 "intrinsic_param_to_search":
+                    config["General"]["intrinsic_param_to_search"]}
         except KeyError:
             pass
 
