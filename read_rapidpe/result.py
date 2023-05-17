@@ -108,6 +108,12 @@ class RapidPE_result:
             # self.marg_log_likelihood = result.marg_log_likelihood
             # ...
 
+    def __getitem__(self, key):
+        """
+        Get res.attr by res["attr"]
+        """
+        return getattr(self, key)
+
     @property
     def grid_coordinates(self):
         """
@@ -480,9 +486,8 @@ class RapidPE_result:
             'method= "cubic", "linear", "linear-scipy", "nearest-scipy",' \
             '"cubic-scipy", "gaussian", or "gaussian-renormalized"'
 
-        grid = Mass_Spin.from_m1m2(self.mass_1, self.mass_2)
-        grid_coord_1 = grid[self.grid_coordinates[0]]
-        grid_coord_2 = grid[self.grid_coordinates[1]]
+        grid_coord_1 = self[self.grid_coordinates[0]]
+        grid_coord_2 = self[self.grid_coordinates[1]]
 
         if method == "gaussian" or method == "gaussian-renormalized":
             # def gaussian_log_likelihood(m1, m2):
@@ -504,6 +509,7 @@ class RapidPE_result:
             #             )
             #     return np.log(likelihood)
             def gaussian_log_likelihood(m1, m2):
+                # FIXME: use grid_coordinates instead of hard-coded
                 mc_arr, eta_arr = transform_m1m2_to_mceta(m1, m2)
 
                 grid_levels = np.unique(self.iteration)

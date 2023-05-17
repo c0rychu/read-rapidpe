@@ -19,6 +19,9 @@ class Mass_Spin:
             self._spin_2z = obj._spin_2z
 
     def __getitem__(self, key):
+        """
+        Get obj.attr by obj["attr"]
+        """
         return getattr(self, key)
 
     @classmethod
