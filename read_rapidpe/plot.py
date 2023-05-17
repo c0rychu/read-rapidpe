@@ -43,3 +43,16 @@ def meshgrid_mceta(result, n=100):
         n)
     mc, eta = np.meshgrid(mclist, etalist)
     return mc, eta
+
+
+def meshgrid_mcq(result, n=100):
+    mclist = np.linspace(
+        result.chirp_mass.min()+0.00001,
+        result.chirp_mass.max()-0.00001,
+        n)
+    qlist = np.linspace(
+        result.mass_ratio.min()+0.00001,
+        result.mass_ratio.max()-0.00001,
+        n)
+    mc, q = np.meshgrid(mclist, qlist)
+    return mc, q
