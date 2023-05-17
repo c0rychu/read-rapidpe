@@ -6,6 +6,7 @@ Author: Cory Chu <cory@gwlab.page>
 from functools import cached_property
 from pathlib import Path
 from joblib import Parallel, delayed
+from configparser import ConfigParser
 import re
 import numpy as np
 import h5py
@@ -92,7 +93,9 @@ class RapidPE_result:
             self.grid_points = result.grid_points
             self._keys = result._keys
 
-            for attr in result._keys + ["event_info", "injection_info"]:
+            for attr in result._keys + ["event_info",
+                                        "injection_info",
+                                        "grid_coordinates"]:
                 try:
                     setattr(self, attr, getattr(result, attr))
                 except AttributeError:
@@ -225,6 +228,7 @@ class RapidPE_result:
 
         event_info_dict_txt = run_dir / "event_info_dict.txt"
         injection_info_txt = run_dir / "injection_info.txt"
+        config_ini = run_dir/"Config.ini"
 
         try:
             result.event_info = load_event_info_dict_txt(event_info_dict_txt)
@@ -234,6 +238,14 @@ class RapidPE_result:
         try:
             result.injection_info = load_injection_info_txt(injection_info_txt)
         except FileNotFoundError:
+            pass
+
+        try:
+            config = ConfigParser()
+            config.read(config_ini)
+            result.grid_coordinates = \
+                config["GridRefine"]["distance-coordinates"]
+        except KeyError:
             pass
 
         return result
