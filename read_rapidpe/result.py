@@ -19,6 +19,7 @@ from .io import dict_to_hdf_group
 
 from .transform import transform_m1m2_to_mceta, transform_mceta_to_m1m2
 from .transform import jacobian_mceta_by_m1m2
+from .transform import Mass_Spin
 
 from matplotlib.tri import Triangulation
 from matplotlib.tri import LinearTriInterpolator, CubicTriInterpolator
@@ -334,11 +335,12 @@ class RapidPE_result:
 
         # Add chirp_mass and symmetric_mass_ratio
         if ("mass_1" in result._keys) and ("mass_2" in result._keys):
-            result.chirp_mass, result.symmetric_mass_ratio = \
-                transform_m1m2_to_mceta(result.mass_1, result.mass_2)
-            result._keys.extend(["chirp_mass", "symmetric_mass_ratio"])
-
-            # TODO: Addn mass_ratio q
+            x = Mass_Spin.from_m1m2(result.mass_1, result.mass_2)
+            result.chirp_mass = x.chirp_mass
+            result.symmetric_mass_ratio = x.symmetric_mass_ratio
+            result.mass_ratio = x.mass_ratio
+            result._keys.extend(
+                ["chirp_mass", "symmetric_mass_ratio", "mass_ratio"])
 
         return cls(result)
 
