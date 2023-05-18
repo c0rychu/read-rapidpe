@@ -509,30 +509,31 @@ class RapidPE_result:
             #             )
             #     return np.log(likelihood)
             def gaussian_log_likelihood(m1, m2):
-                # FIXME: use grid_coordinates instead of hard-coded
-                mc_arr, eta_arr = transform_m1m2_to_mceta(m1, m2)
+                x = Mass_Spin.from_m1m2(m1, m2)
+                x1 = x[self.grid_coordinates[0]]
+                x2 = x[self.grid_coordinates[1]]
 
                 grid_levels = np.unique(self.iteration)
-                sigma_mc = {}
-                sigma_eta = {}
+                sigma_1 = {}
+                sigma_2 = {}
 
                 for gl in grid_levels:
-                    sigma_mc[gl] = grid_separation_min(
-                            self.chirp_mass[self.iteration == gl]
+                    sigma_1[gl] = grid_separation_min(
+                            grid_coord_1[self.iteration == gl]
                         ) * gaussian_sigma_to_grid_size_ratio
-                    sigma_eta[gl] = grid_separation_min(
-                            self.symmetric_mass_ratio[self.iteration == gl]
+                    sigma_2[gl] = grid_separation_min(
+                            grid_coord_2[self.iteration == gl]
                         ) * gaussian_sigma_to_grid_size_ratio
 
-                likelihood = np.zeros_like(mc_arr)
-                for i in range(len(self.chirp_mass)):
+                likelihood = np.zeros_like(x1)
+                for i in range(len(grid_coord_1)):
                     likelihood += \
                         np.exp(self.marg_log_likelihood[i]) * \
                         np.exp(
-                            (-0.5/sigma_mc[self.iteration[i]]**2
-                             * (mc_arr - self.chirp_mass[i])**2) +
-                            (-0.5/sigma_eta[self.iteration[i]]**2
-                             * (eta_arr - self.symmetric_mass_ratio[i])**2)
+                            (-0.5/sigma_1[self.iteration[i]]**2
+                             * (x1 - grid_coord_1[i])**2) +
+                            (-0.5/sigma_2[self.iteration[i]]**2
+                             * (x2 - grid_coord_2[i])**2)
                         )
                 return np.log(likelihood)
             self.log_likelihood = gaussian_log_likelihood
