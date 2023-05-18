@@ -12,11 +12,13 @@ class Mass_Spin:
             self._mass_2 = None
             self._spin_1z = None
             self._spin_2z = None
+            self.grid_coordinates = None
         else:
             self._mass_1 = obj._mass_1
             self._mass_2 = obj._mass_2
             self._spin_1z = obj._spin_1z
             self._spin_2z = obj._spin_2z
+            self.grid_coordinates = obj.grid_coordinates
 
     def __getitem__(self, key):
         """
@@ -25,36 +27,66 @@ class Mass_Spin:
         return getattr(self, key)
 
     @classmethod
-    def from_m1m2s1zs2z(cls, mass_1, mass_2, spin_1z, spin_2z):
+    def from_x1x2(cls, x1, x2, grid_coordinates):
+        obj = cls()
+        obj.grid_coordinates = grid_coordinates
+        if grid_coordinates[0] == "chirp_mass":
+            if grid_coordinates[1] == "mass_ratio":
+                obj._mass_1, obj._mass_2 = cls.mcq_to_m1m2(x1, x2)
+            elif grid_coordinates[1] == "symmetric_mass_ratio":
+                obj._mass_1, obj._mass_2 = cls.mceta_to_m1m2(x1, x2)
+            else:
+                raise ValueError("Invalid grid_coordinates")
+        else:
+            raise ValueError("Invalid grid_coordinates")
+        return obj
+
+    @classmethod
+    def from_m1m2s1zs2z(cls,
+                        mass_1,
+                        mass_2,
+                        spin_1z,
+                        spin_2z,
+                        grid_coordinates=None):
         obj = cls()
         obj._mass_1 = mass_1
         obj._mass_2 = mass_2
         obj._spin_1z = spin_1z
         obj._spin_2z = spin_2z
+        obj.grid_coordinates = grid_coordinates
         return obj
 
     @classmethod
-    def from_m1m2(cls, mass_1, mass_2):
+    def from_m1m2(cls, mass_1, mass_2, grid_coordinates=None):
         obj = cls()
         obj._mass_1 = mass_1
         obj._mass_2 = mass_2
+        obj.grid_coordinates = grid_coordinates
         return obj
 
     @classmethod
-    def from_mceta(cls, mc, eta):
+    def from_mceta(cls, mc, eta, grid_coordinates=None):
         obj = cls()
         m1, m2 = cls.mceta_to_m1m2(mc, eta)
         obj._mass_1 = m1
         obj._mass_2 = m2
+        obj.grid_coordinates = grid_coordinates
         return obj
 
     @classmethod
-    def from_mcq(cls, mc, q):
+    def from_mcq(cls, mc, q, grid_coordinates=None):
         obj = cls()
         m1, m2 = cls.mcq_to_m1m2(mc, q)
         obj._mass_1 = m1
         obj._mass_2 = m2
+        obj.grid_coordinates = grid_coordinates
         return obj
+
+    @property
+    def x1x2(self):
+        x1 = self[self.grid_coordinates[0]]
+        x2 = self[self.grid_coordinates[1]]
+        return x1, x2
 
     @property
     def mass_1(self):
