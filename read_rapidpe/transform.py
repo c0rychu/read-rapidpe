@@ -28,6 +28,30 @@ class Mass_Spin:
 
     @classmethod
     def from_x1x2(cls, x1, x2, grid_coordinates):
+        """
+        Create a Mass_Spin object from the first two mass-spin coordinates
+        x1, x2 defined in the "grid_coordinates"
+
+        Parameters
+        ----------
+        x1: float or np.ndarray
+            The first mass-spin coordinate
+        x2: float or np.ndarray
+            The second mass-spin coordinate
+        grid_coordinates: list
+            The two mass-spin coordinates defining the grid
+            e.g.
+                ["chirp_mass", "mass_ratio"]
+                ["chirp_mass", "symmetric_mass_ratio"]
+                ["chirp_mass", "mass_ratio", "chi_eff", "chi_a"]
+                ["chirp_mass", "symmetric_mass_ratio", "chi_eff", "chi_a"]
+
+        Returns
+        -------
+        obj: Mass_Spin
+            The Mass_Spin object
+
+        """
         obj = cls()
         obj.grid_coordinates = grid_coordinates
         if grid_coordinates[0] == "chirp_mass":
