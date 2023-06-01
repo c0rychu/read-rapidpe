@@ -389,7 +389,7 @@ class RapidPE_result:
 
         return cls(result)
 
-    def to_hdf(self, hdf_filename, compression=None):
+    def to_hdf(self, hdf_filename, extrinsic_table=True, compression=None):
         """
         Save result to hdf file
 
@@ -406,7 +406,7 @@ class RapidPE_result:
 
             # Check if there is extrinsic_table
             gp = self.grid_points[0]
-            extrinsic_table = True if len(gp.extrinsic_table) > 0 else False
+            extrinsic_table &= len(gp.extrinsic_table) > 0
 
             # Create "grid_points" group to hold self.grid_points
             group_grid_points_raw = \
