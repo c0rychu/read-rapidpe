@@ -113,6 +113,16 @@ class Mass_Spin:
         return x1, x2
 
     @property
+    def x1(self):
+        x1 = self[self.grid_coordinates[0]]
+        return x1
+
+    @property
+    def x2(self):
+        x2 = self[self.grid_coordinates[1]]
+        return x2
+
+    @property
     def mass_1(self):
         return self._mass_1
 

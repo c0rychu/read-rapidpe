@@ -115,18 +115,19 @@ class RapidPE_result:
         return getattr(self, key)
 
     @cached_property
-    def x1(self):
+    def _x(self):
         x = Mass_Spin.from_m1m2(self.mass_1,
                                 self.mass_2,
                                 grid_coordinates=self.grid_coordinates)
-        return x.x1
+        return x
+
+    @cached_property
+    def x1(self):
+        return self._x.x1
 
     @cached_property
     def x2(self):
-        x = Mass_Spin.from_m1m2(self.mass_1,
-                                self.mass_2,
-                                grid_coordinates=self.grid_coordinates)
-        return x.x2
+        return self._x.x2
 
     @property
     def grid_coordinates(self):
