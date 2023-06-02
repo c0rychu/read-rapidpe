@@ -122,11 +122,11 @@ class Mass_Spin:
 
     @property
     def mass_2(self):
-        return self._mass_1
+        return self._mass_2
 
     @mass_2.setter
     def mass_2(self, value):
-        self._mass_1 = value
+        self._mass_2 = value
 
     @property
     def chirp_mass(self):
@@ -206,6 +206,7 @@ class Mass_Spin:
     def m1m2_to_q(cls, m1, m2):
         """
         Compute mass ratio from component masses
+        q = m2/m1, where m1 >= m2
         """
         q = np.minimum(m1, m2) / np.maximum(m1, m2)
         return q
@@ -226,23 +227,40 @@ class Mass_Spin:
         eta = m1*m2 / (m1+m2)**2
         return eta
 
+    @classmethod
+    def jacobian_m1m2_by_mceta(cls, mc, eta):
+        """
+        Return the Jacobian (m1, m2)/(mc, eta)
+        """
+        assert np.all(mc > 0), "chirp_mass (Mc) should > 0"
+        assert np.all(eta > 0), "symmetric_mass_ratio (eta) should > 0"
+        assert np.all(eta <= 0.25), "symmetric_mass_ratio (eta) should <= 0.25"
 
-def jacobian_m1m2_by_mceta(mc, eta):
-    """
-    return the Jacobian (m1, m2)/(mc, eta)
-    """
-    assert np.all(mc > 0), "chirp_mass (Mc) should > 0"
-    assert np.all(eta > 0), "symmetric_mass_ratio (eta) should > 0"
-    assert np.all(eta <= 0.25), "symmetric_mass_ratio (eta) should <= 0.25"
+        return mc / (np.sqrt(1. - 4.*eta) * eta**1.2)  # 6/5 = 1.2
 
-    return mc / (np.sqrt(1. - 4.*eta) * eta**1.2)  # 6/5 = 1.2
+    @classmethod
+    def jacobian_mceta_by_m1m2(cls, m1, m2):
+        """
+        Return the Jacobian (mc, eta)/(m1, m2)
+        """
+        return (m1-m2)*(m1*m2)**0.6 / (m1+m2)**3.2  # 3/5 = 0.6, 16/5 = 3.2
 
+    @classmethod
+    def jacobian_m1m2_by_mcq(cls, mc, q):
+        """
+        Return the Jacobian (m1, m2)/(mc, q)
+        """
+        assert np.all(mc > 0), "chirp_mass (Mc) should > 0"
+        assert np.all(q > 0), "mass_ratio (q) should > 0"
 
-def jacobian_mceta_by_m1m2(m1, m2):
-    """
-    return the Jacobian (mc, eta)/(m1, m2)
-    """
-    return (m1-m2)*(m1*m2)**0.6 / (m1+m2)**3.2  # 3/5 = 0.6, 16/5 = 3.2
+        return mc * (1+q)**0.4 / q**1.2  # 2/5 = 0.4, 6/5 = 1.2
+
+    @classmethod
+    def jacobian_mcq_by_m1m2(cls, m1, m2):
+        """
+        Return the Jacobian (mc, q)/(m1, m2)
+        """
+        return (m1*m2)**0.6 / (m1**2 * (m1+m2)**0.2)  # 3/5 = 0.6, 1/5 = 0.2
 
 
 # =====================================================================
@@ -256,6 +274,14 @@ def transform_m1m2_to_mceta(m1, m2):
 
 def transform_mceta_to_m1m2(mc, eta):
     return Mass_Spin.mceta_to_m1m2(mc, eta)
+
+
+def jacobian_m1m2_by_mceta(mc, eta):
+    return Mass_Spin.jacobian_m1m2_by_mceta(mc, eta)
+
+
+def jacobian_mceta_by_m1m2(m1, m2):
+    return Mass_Spin.jacobian_mceta_by_m1m2(m1, m2)
 
 
 # =====================================================================
