@@ -96,7 +96,8 @@ class RapidPE_result:
 
             for attr in result._keys + ["event_info",
                                         "injection_info",
-                                        "config_info"]:
+                                        "config_info",
+                                        "posterior_samples"]:
                 try:
                     setattr(self, attr, getattr(result, attr))
                 except AttributeError:
@@ -203,23 +204,26 @@ class RapidPE_result:
         """
         result = cls()
         with h5py.File(hdf_file, "r") as f:
-            # Load grid_points
-            gps = f["grid_points"]
-            N = len(gps)
-            result.grid_points = np.empty(N, dtype=object)
-            for i, gp in enumerate(gps.values()):
-                result.grid_points[i] = \
-                    RapidPE_grid_point.from_hdf_grid_point_group(
-                        hdf_gp_group=gp,
-                        extrinsic_table=extrinsic_table
-                        )
+            try:
+                # Load grid_points
+                gps = f["grid_points"]
+                N = len(gps)
+                result.grid_points = np.empty(N, dtype=object)
+                for i, gp in enumerate(gps.values()):
+                    result.grid_points[i] = \
+                        RapidPE_grid_point.from_hdf_grid_point_group(
+                            hdf_gp_group=gp,
+                            extrinsic_table=extrinsic_table
+                            )
 
-            # Load intrinsic_table
-            it = f["intrinsic_table"]
-            result.intrinsic_table = {key: it[key] for key in it.dtype.names}
+                # Load intrinsic_table
+                it = f["intrinsic_table"]
+                result.intrinsic_table = {key: it[key] for key in it.dtype.names}  # noqa E501
+                result._keys = list(it.dtype.names)
+            except KeyError:
+                pass
 
             # Load other attributes
-            result._keys = list(it.dtype.names)
             for attr in result._keys:
                 try:
                     setattr(result, attr, result.intrinsic_table[attr])
@@ -233,6 +237,13 @@ class RapidPE_result:
                     setattr(result, attr, x)
                 except KeyError:
                     pass
+
+            # Load posterior samples
+            try:
+                result.posterior_samples = \
+                     recarray_to_dict_of_ndarray(f["posterior_samples"])
+            except KeyError:
+                pass
 
         return cls(result)
 
@@ -425,53 +436,56 @@ class RapidPE_result:
 
         with h5py.File(hdf_filename, 'w', track_order=True) as f:
 
-            # Check if there is extrinsic_table
-            gp = self.grid_points[0]
-            extrinsic_table &= len(gp.extrinsic_table) > 0
+            # Check if there are results
+            if len(self.grid_points) != 0:
 
-            # Create "grid_points" group to hold self.grid_points
-            group_grid_points_raw = \
-                f.create_group("grid_points", track_order=True)
+                # Check if there is extrinsic_table
+                gp = self.grid_points[0]
+                extrinsic_table &= len(gp.extrinsic_table) > 0
 
-            for i, gp in enumerate(self.grid_points):
-                group_gp = group_grid_points_raw.create_group(str(i))
+                # Create "grid_points" group to hold self.grid_points
+                group_grid_points_raw = \
+                    f.create_group("grid_points", track_order=True)
 
-                # Add intrinsic_table
-                it = dict_of_ndarray_to_recarray(gp.intrinsic_table)
-                group_gp.create_dataset("intrinsic_table", data=it)
+                for i, gp in enumerate(self.grid_points):
+                    group_gp = group_grid_points_raw.create_group(str(i))
 
-                # Add extrinsic_table
+                    # Add intrinsic_table
+                    it = dict_of_ndarray_to_recarray(gp.intrinsic_table)
+                    group_gp.create_dataset("intrinsic_table", data=it)
+
+                    # Add extrinsic_table
+                    if extrinsic_table:
+                        et = dict_of_ndarray_to_recarray(gp.extrinsic_table)
+                        group_gp.create_dataset("extrinsic_table",
+                                                data=et,
+                                                compression=compression)
+
+                    # Add xml_filename
+                    group_gp.attrs["xml_filename"] = gp.xml_filename
+
+                # Combine intrinsic parameters into "intrinsic_table" dataset
+                result_np = dict_of_ndarray_to_recarray(self.intrinsic_table)
+                f.create_dataset("intrinsic_table", data=result_np)
+
+                # Create virtual dataset for "extrinsic_samples"
                 if extrinsic_table:
-                    et = dict_of_ndarray_to_recarray(gp.extrinsic_table)
-                    group_gp.create_dataset("extrinsic_table",
-                                            data=et,
-                                            compression=compression)
+                    gps = f["grid_points"]
+                    ds0 = f["grid_points/0/extrinsic_table"]
+                    n_samples = np.array(
+                        [gp["extrinsic_table"].shape[0] for gp in gps.values()])  # noqa: E501
+                    n_samples = np.cumsum(n_samples)
+                    n_samples = np.concatenate([[0], n_samples])
+                    layout = h5py.VirtualLayout(shape=(n_samples[-1], ),
+                                                dtype=ds0.dtype)
 
-                # Add xml_filename
-                group_gp.attrs["xml_filename"] = gp.xml_filename
+                    for i, gp in enumerate(gps.values()):
+                        vsource = h5py.VirtualSource(gp["extrinsic_table"])
+                        layout[n_samples[i]:n_samples[i+1]] = vsource
 
-            # Combine intrinsic parameters into "intrinsic_table" dataset
-            result_np = dict_of_ndarray_to_recarray(self.intrinsic_table)
-            f.create_dataset("intrinsic_table", data=result_np)
+                    f.create_virtual_dataset('extrinsic_samples', layout)
 
-            # Create virtual dataset for "extrinsic_samples"
-            if extrinsic_table:
-                gps = f["grid_points"]
-                ds0 = f["grid_points/0/extrinsic_table"]
-                n_samples = np.array(
-                    [gp["extrinsic_table"].shape[0] for gp in gps.values()])
-                n_samples = np.cumsum(n_samples)
-                n_samples = np.concatenate([[0], n_samples])
-                layout = h5py.VirtualLayout(shape=(n_samples[-1], ),
-                                            dtype=ds0.dtype)
-
-                for i, gp in enumerate(gps.values()):
-                    vsource = h5py.VirtualSource(gp["extrinsic_table"])
-                    layout[n_samples[i]:n_samples[i+1]] = vsource
-
-                f.create_virtual_dataset('extrinsic_samples', layout)
-
-            # Save event_info and injection_info
+            # Save event_info, injection_info, and config_info
             for attr in ["event_info", "injection_info", "config_info"]:
                 try:
                     x = getattr(self, attr)
@@ -479,6 +493,13 @@ class RapidPE_result:
                     dict_to_hdf_group(x, g)
                 except AttributeError:
                     pass
+
+            # Save posterior_samples
+            try:
+                data = dict_of_ndarray_to_recarray(self.posterior_samples)
+                f.create_dataset("posterior_samples", data=data)
+            except AttributeError:
+                pass
 
     def do_interpolate_marg_log_likelihood_m1m2(
             self,
