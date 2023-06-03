@@ -165,6 +165,22 @@ class Mass_Spin:
     def mcq(self):
         return self.chirp_mass, self.mass_ratio
 
+    @property
+    def jacobian_x1x2_by_m1m2(self):
+        if self.grid_coordinates[0] == "chirp_mass":
+            if self.grid_coordinates[1] == "mass_ratio":
+                return self.jacobian_mcq_by_m1m2(self._mass_1, self._mass_2)
+            elif self.grid_coordinates[1] == "symmetric_mass_ratio":
+                return self.jacobian_mceta_by_m1m2(self._mass_1, self._mass_2)
+            else:
+                raise ValueError("Invalid grid_coordinates")
+        else:
+            raise ValueError("Invalid grid_coordinates")
+
+    @property
+    def jacobian_m1m2_by_x1x2(self):
+        return 1/self.jacobian_x1x2_by_m1m2
+
     @classmethod
     def _norm_sym_ratio(cls, eta):
         """
