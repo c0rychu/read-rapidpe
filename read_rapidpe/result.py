@@ -241,6 +241,7 @@ class RapidPE_result:
                      use_numpy=True,
                      use_ligolw=True,
                      extrinsic_table=True,
+                     load_results=True,
                      parallel_n=1):
         """
         Get result from a Rapid-PE run_dir
@@ -262,14 +263,18 @@ class RapidPE_result:
 
         """
         run_dir = Path(run_dir)
-        results_dir = Path(run_dir)/Path("results")
-        xml_array = [f.as_posix() for f in sorted(results_dir.glob("*.xml.gz"))]  # noqa: E501
 
-        result = cls.from_xml_array(xml_array,
-                                    use_numpy=use_numpy,
-                                    use_ligolw=use_ligolw,
-                                    extrinsic_table=extrinsic_table,
-                                    parallel_n=parallel_n)
+        if load_results:
+            results_dir = Path(run_dir)/Path("results")
+            xml_array = [f.as_posix() for f in sorted(results_dir.glob("*.xml.gz"))]  # noqa: E501
+
+            result = cls.from_xml_array(xml_array,
+                                        use_numpy=use_numpy,
+                                        use_ligolw=use_ligolw,
+                                        extrinsic_table=extrinsic_table,
+                                        parallel_n=parallel_n)
+        else:
+            result = cls()
 
         event_info_dict_txt = run_dir / "event_info_dict.txt"
         injection_info_txt = run_dir / "injection_info.txt"
