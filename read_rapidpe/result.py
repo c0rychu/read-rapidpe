@@ -767,6 +767,29 @@ class RapidPE_result:
                                    method="gaussian",
                                    gaussian_sigma_to_grid_size_ratio=1.0,
                                    em_bright_compatible=True):
+        """
+        Generate posterior samples.
+        The generated samples are saved in self.samples
+
+        Parameters
+        ----------
+        N: int
+            Number of samples to generate
+            Default: 5000
+
+        method: str
+            Method to generate samples
+            Default: "gaussian"
+
+        gaussian_sigma_to_grid_size_ratio: float
+            Ratio of sigma to grid size
+            Default: 1.0
+
+        em_bright_compatible: bool
+            If True, generate samples compatible with EM_BRIGHT
+            Default: True
+
+        """
         if method == "gaussian":
             grid_levels = np.unique(self.iteration)
             cov = {}
