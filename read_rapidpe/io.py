@@ -105,6 +105,13 @@ def dict_of_ndarray_to_recarray(dict_of_ndarray):
         )
 
 
+def recarray_to_dict_of_ndarray(recarray):
+    """
+    Convert numpy record-array to dict of ndarray
+    """
+    return {key: recarray[key] for key in recarray.dtype.names}
+
+
 def dict_to_hdf_group(input_dict, hdf_group):
     """
     Save nested python dict to existing hdf5 group
