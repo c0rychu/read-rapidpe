@@ -847,17 +847,18 @@ class RapidPE_result:
                                     x2,
                                     grid_coordinates=self.grid_coordinates)
 
-            # An ad-hoc cut on the mass_1
-            mask_m1_max = x.mass_1 < 500
+            # An ad-hoc cut on the mass_1 and mass_2
+            mask_m1m2 = x.mass_1 < 500
+            mask_m1m2 &= x.mass_2 > 0.1
 
             # Re-weight the samples according to the Jacobian such that
             # it has a uniform prior in m1-m2 space
             # Reference: https://dcc.ligo.org/LIGO-T2300198
-            weight = x.jacobian_m1m2_by_x1x2[mask_m1_max]
+            weight = x.jacobian_m1m2_by_x1x2[mask_m1m2]
             weight /= np.sum(weight)
 
-            m = {"mass_1": x.mass_1[mask_m1_max],
-                 "mass_2": x.mass_2[mask_m1_max]}
+            m = {"mass_1": x.mass_1[mask_m1m2],
+                 "mass_2": x.mass_2[mask_m1m2]}
 
             m = dict_of_ndarray_to_recarray(m)
             samples = np.random.choice(m, size=N, p=weight, replace=False)
