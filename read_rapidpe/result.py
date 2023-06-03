@@ -15,6 +15,7 @@ from .grid_point import RapidPE_grid_point
 from .io import load_event_info_dict_txt
 from .io import load_injection_info_txt
 from .io import dict_of_ndarray_to_recarray
+from .io import recarray_to_dict_of_ndarray
 from .io import dict_from_hdf_group
 from .io import dict_to_hdf_group
 
@@ -739,3 +740,96 @@ class RapidPE_result:
             m_samples = np.random.choice(m, size=N, p=prob, replace=False)
             m1, m2 = np.array([[x["m1"], x["m2"]] for x in m_samples]).T
             self.samples = {"mass_1": m1, "mass_2": m2}
+
+    def generate_posterior_samples(self,
+                                   N=5000,
+                                   method="gaussian",
+                                   gaussian_sigma_to_grid_size_ratio=1.0,
+                                   em_bright_compatible=True):
+        if method == "gaussian":
+            grid_levels = np.unique(self.iteration)
+            cov = {}
+            for gl in grid_levels:
+                mask = self.iteration == gl
+                sigma_x1 = grid_separation_min(
+                    self.x1[mask]) * gaussian_sigma_to_grid_size_ratio
+                sigma_x2 = grid_separation_min(
+                    self.x2[mask]) * gaussian_sigma_to_grid_size_ratio
+                cov[gl] = np.diag([sigma_x1**2, sigma_x2**2])
+
+            # Compute likelihood at each grid point
+            likelihood = np.exp(self.marg_log_likelihood)
+            sum_likelihood = np.sum(likelihood)
+
+            # Compute number of samples for each grid point
+            N_multinomial = multinomial(N*20, likelihood/sum_likelihood)
+            N_per_grid_point = N_multinomial.rvs(1)[0]
+
+            # Generate samples
+            samples = np.zeros([0, 2])
+            for x1, x2, lh, gl, n in zip(self.x1,
+                                         self.x2,
+                                         likelihood,
+                                         self.iteration,
+                                         N_per_grid_point):
+                samples = np.concatenate([
+                    samples,
+                    np.random.multivariate_normal([x1, x2], cov[gl], n)
+                    ])
+            x1, x2 = samples.T
+
+            # Mask out the samples outside the region of interest
+            if self.grid_coordinates[0] == "chirp_mass":
+                x1_min = 0.0
+            else:
+                raise ValueError("Unknown grid coordinate x1")
+
+            if self.grid_coordinates[1] == "mass_ratio":
+                x2_max = 1.0
+                x2_min = 0.0
+            elif self.grid_coordinates[1] == "symmetric_mass_ratio":
+                x2_max = 0.25
+                x2_min = 0.0
+            else:
+                raise ValueError("Unknown grid coordinate x2")
+
+            mask = x2 <= x2_max
+            mask &= x2 > x2_min
+            mask &= x1 > x1_min
+
+            x1, x2 = x1[mask], x2[mask]
+
+            x = Mass_Spin.from_x1x2(x1,
+                                    x2,
+                                    grid_coordinates=self.grid_coordinates)
+
+            # An ad-hoc cut on the mass_1
+            mask_m1_max = x.mass_1 < 500
+
+            # Re-weight the samples according to the Jacobian such that
+            # it has a uniform prior in m1-m2 space
+            # Reference: https://dcc.ligo.org/LIGO-T2300198
+            weight = x.jacobian_m1m2_by_x1x2[mask_m1_max]
+            weight /= np.sum(weight)
+
+            m = {"mass_1": x.mass_1[mask_m1_max],
+                 "mass_2": x.mass_2[mask_m1_max]}
+
+            m = dict_of_ndarray_to_recarray(m)
+            samples = np.random.choice(m, size=N, p=weight, replace=False)
+            samples = recarray_to_dict_of_ndarray(samples)
+
+            if em_bright_compatible:
+                shape = samples["mass_1"].shape
+                event_spin = self.event_info["event_spin"]
+                spin_1z = np.broadcast_to(event_spin["spin_1z"], shape)
+                spin_2z = np.broadcast_to(event_spin["spin_2z"], shape)
+
+                samples["mass_1_source"] = samples["mass_1"]
+                samples["mass_2_source"] = samples["mass_2"]
+                samples["spin_1z"] = spin_1z
+                samples["spin_2z"] = spin_2z
+
+                self.posterior_samples = samples
+            else:
+                self.posterior_samples = samples
