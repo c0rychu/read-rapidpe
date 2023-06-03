@@ -830,10 +830,10 @@ class RapidPE_result:
 
             if self.grid_coordinates[1] == "mass_ratio":
                 x2_max = 1.0
-                x2_min = 0.0
+                x2_min = max(0.0, self.x2.min()-sigma_x2)
             elif self.grid_coordinates[1] == "symmetric_mass_ratio":
                 x2_max = 0.25
-                x2_min = 0.0
+                x2_min = max(0.0, self.x2.min()-sigma_x2)
             else:
                 raise ValueError("Unknown grid coordinate x2")
 
@@ -849,7 +849,7 @@ class RapidPE_result:
 
             # An ad-hoc cut on the mass_1 and mass_2
             mask_m1m2 = x.mass_1 < 500
-            mask_m1m2 &= x.mass_2 > 0.1
+            # mask_m1m2 &= x.mass_2 > 0.1
 
             # Re-weight the samples according to the Jacobian such that
             # it has a uniform prior in m1-m2 space
