@@ -145,13 +145,17 @@ def meshgrid_mcq(result, n=100):
 # Plotting
 # ===============================================
 
-def plot_corner(samples, show_titles=True, **kwargs):
+def plot_corner(samples, zoom_in_percent=None, show_titles=True, **kwargs):
     import corner
-    plot_range = []
-    for key in samples.keys():
-        a = np.percentile(samples[key], 0.5)
-        b = np.percentile(samples[key], 99.5)
-        plot_range.append((a, b))
+
+    if zoom_in_percent is None:
+        plot_range = None
+    else:
+        plot_range = []
+        for key in samples.keys():
+            a = np.percentile(samples[key], zoom_in_percent/2.0)
+            b = np.percentile(samples[key], 100.0-zoom_in_percent/2.0)
+            plot_range.append((a, b))
     return corner.corner(samples,
                          show_titles=show_titles,
                          range=plot_range,
