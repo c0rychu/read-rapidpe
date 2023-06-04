@@ -39,7 +39,7 @@ def pretty_plt(plt, usetex=True):
 
 
 @contextmanager
-def pretty_plot(rc={}, use_preset=True):
+def pretty_plot(rc={}, use_preset=True, usetex=None, serif=None):
     """
     Context manager for pretty plots
     Usage:
@@ -52,11 +52,21 @@ def pretty_plot(rc={}, use_preset=True):
 
     Parameters
     ----------
-    rc : dict
+    rc : dict, optional
         Dictionary of matplotlib rc parameters
 
-    use_preset : bool
+    use_preset : bool, optional
         Whether to use preset pretty rc parameters
+
+    usetex : bool, optional
+        A shortcut for rc={"text.usetex": True} or rc={"text.usetex": False}
+
+    serif : bool, optional
+        A shortcut for rc font.family
+        if serif is True:
+            rc={"font.family": "serif"}
+        elif serif is False:
+            rc={"font.family": "sans-serif"}
 
     """
     import matplotlib.pyplot as plt
@@ -86,6 +96,19 @@ def pretty_plot(rc={}, use_preset=True):
             }
     else:
         rc_params = {}
+
+    # Shortcuts for usetex and serif
+    if usetex is True:
+        rc_params["text.usetex"] = True
+    elif usetex is False:
+        rc_params["text.usetex"] = False
+
+    if serif is True:
+        rc_params["font.family"] = "serif"
+    elif serif is False:
+        rc_params["font.family"] = "sans-serif"
+
+    # Update rc_params by user input
     rc_params.update(rc)
 
     with plt.rc_context(rc=rc_params) as rc_context:
@@ -161,3 +184,4 @@ def plot_grid(res, posterior_samples=True):
     plt.colorbar(label=r"$\ln\mathcal{L}_{\mathrm{marg}}$")
     plt.xlabel(res.grid_coordinates[0])
     plt.ylabel(res.grid_coordinates[1])
+    plt.tight_layout()
