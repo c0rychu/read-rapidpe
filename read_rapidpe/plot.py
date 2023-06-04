@@ -56,3 +56,20 @@ def meshgrid_mcq(result, n=100):
         n)
     mc, q = np.meshgrid(mclist, qlist)
     return mc, q
+
+
+# ===============================================
+# Plotting
+# ===============================================
+
+def plot_corner(samples, show_titles=True, **kwargs):
+    import corner
+    plot_range = []
+    for key in samples.keys():
+        a = np.percentile(samples[key], 0.5)
+        b = np.percentile(samples[key], 99.5)
+        plot_range.append((a, b))
+    return corner.corner(samples,
+                         show_titles=show_titles,
+                         range=plot_range,
+                         **kwargs)
