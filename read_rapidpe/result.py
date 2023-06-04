@@ -830,10 +830,12 @@ class RapidPE_result:
 
             if self.grid_coordinates[1] == "mass_ratio":
                 x2_max = 1.0
-                x2_min = max(0.0, self.x2.min()-sigma_x2)
+                # x2_min = max(0.0, self.x2.min()-sigma_x2)
+                x2_min = 0.0
             elif self.grid_coordinates[1] == "symmetric_mass_ratio":
                 x2_max = 0.25
-                x2_min = max(0.0, self.x2.min()-sigma_x2)
+                # x2_min = max(0.0, self.x2.min()-sigma_x2)
+                x2_min = 0.0
             else:
                 raise ValueError("Unknown grid coordinate x2")
 
