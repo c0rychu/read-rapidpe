@@ -880,3 +880,7 @@ class RapidPE_result:
                 self.posterior_samples = samples
             else:
                 self.posterior_samples = samples
+
+    def plot_grid(self, posterior_samples=True):
+        from .plot import plot_grid
+        plot_grid(self, posterior_samples=posterior_samples)

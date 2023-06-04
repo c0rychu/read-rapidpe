@@ -1,4 +1,5 @@
 import numpy as np
+from .transform import Mass_Spin
 
 
 def pretty_plt(plt, usetex=True):
@@ -73,3 +74,31 @@ def plot_corner(samples, show_titles=True, **kwargs):
                          show_titles=show_titles,
                          range=plot_range,
                          **kwargs)
+
+
+def plot_grid(res, posterior_samples=True):
+    from matplotlib import pyplot as plt
+    if posterior_samples:
+        try:
+            m1 = res.posterior_samples["mass_1"]
+            m2 = res.posterior_samples["mass_2"]
+            x = Mass_Spin.from_m1m2(m1,
+                                    m2,
+                                    grid_coordinates=res.grid_coordinates)
+            plt.scatter(x.x1, x.x2, alpha=0.1, c="k", s=1)
+        except AttributeError:
+            pass
+
+    vmin = res.marg_log_likelihood.min()
+    vmax = res.marg_log_likelihood.max()
+    for gl in res.iteration:
+        plt.scatter(res.x1[res.iteration == gl],
+                    res.x2[res.iteration == gl],
+                    marker="+",
+                    s=60/(gl+1),
+                    vmin=vmin,
+                    vmax=vmax,
+                    c=res.marg_log_likelihood[res.iteration == gl])
+    plt.colorbar(label=r"$\ln\mathcal{L}_{\mathrm{marg}}$")
+    plt.xlabel(res.grid_coordinates[0])
+    plt.ylabel(res.grid_coordinates[1])
