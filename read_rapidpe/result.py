@@ -923,6 +923,7 @@ class RapidPE_result:
 
     def plot_corner(self,
                     columns=["mass_1", "mass_2"],
+                    title=None,
                     **kwargs):
         from .plot import plot_corner
 
@@ -933,4 +934,9 @@ class RapidPE_result:
             except KeyError:
                 pass
 
-        plot_corner(samples, **kwargs)
+        fig = plot_corner(samples, **kwargs)
+
+        if title is not None:
+            fig.suptitle(title, y=1.05)
+
+        return fig
