@@ -767,6 +767,7 @@ class RapidPE_result:
     def generate_posterior_samples(self,
                                    N=5000,
                                    method="gaussian",
+                                   seed=None,
                                    gaussian_sigma_to_grid_size_ratio=1.0,
                                    em_bright_compatible=True):
         """
@@ -792,6 +793,9 @@ class RapidPE_result:
             Default: True
 
         """
+
+        rng = np.random.default_rng(seed)
+
         if method == "gaussian":
             grid_levels = np.unique(self.iteration)
             cov = {}
@@ -808,8 +812,7 @@ class RapidPE_result:
                           - logsumexp(self.marg_log_likelihood))
 
             # Compute number of samples for each grid point
-            N_multinomial = multinomial(N*20, prob)
-            N_per_grid_point = N_multinomial.rvs(1)[0]
+            N_per_grid_point = rng.multinomial(N*20, pvals=prob)
 
             # Generate samples
             samples = np.zeros([0, 2])
@@ -819,7 +822,7 @@ class RapidPE_result:
                                      N_per_grid_point):
                 samples = np.concatenate([
                     samples,
-                    np.random.multivariate_normal([x1, x2], cov[gl], n)
+                    rng.multivariate_normal([x1, x2], cov[gl], n)
                     ])
             x1, x2 = samples.T
 
@@ -862,7 +865,7 @@ class RapidPE_result:
                  "mass_2": x.mass_2[mask_m1m2]}
 
             m = dict_of_ndarray_to_recarray(m)
-            samples = np.random.choice(m, size=N, p=weight, replace=False)
+            samples = rng.choice(m, size=N, p=weight, replace=False)
             samples = recarray_to_dict_of_ndarray(samples)
 
             if em_bright_compatible:
