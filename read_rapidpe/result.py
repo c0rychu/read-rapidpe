@@ -883,9 +883,43 @@ class RapidPE_result:
             else:
                 self.posterior_samples = samples
 
-    def plot_grid(self, posterior_samples=True):
+    def plot_grid(self,
+                  posterior_samples=True,
+                  true_params=True,
+                  legend_loc=None):
+        import matplotlib.pyplot as plt
         from .plot import plot_grid
+
         plot_grid(self, posterior_samples=posterior_samples)
+
+        if true_params:
+            legend = False
+            try:
+                x_inj = Mass_Spin.from_m1m2(
+                    self.injection_info["mass_1"],
+                    self.injection_info["mass_2"],
+                    grid_coordinates=self.grid_coordinates
+                )
+                plt.scatter(x_inj.x1, x_inj.x2, marker="*", c="r", s=35,
+                            label="Injection")
+                legend = True
+            except AttributeError:
+                pass
+
+            try:
+                x_pipe = Mass_Spin.from_m1m2(
+                    self.event_info["intrinsic_param"]["mass_1"],
+                    self.event_info["intrinsic_param"]["mass_2"],
+                    grid_coordinates=self.grid_coordinates
+                )
+                plt.scatter(x_pipe.x1, x_pipe.x2, marker="o", c="b", s=15,
+                            label="Search Pipeline")
+                legend = True
+            except AttributeError:
+                pass
+
+            if legend:
+                plt.legend(loc=legend_loc, fontsize="8", fancybox=False)
 
     def plot_corner(self,
                     columns=["mass_1", "mass_2"],
