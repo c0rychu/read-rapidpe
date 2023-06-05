@@ -28,6 +28,8 @@ from matplotlib.tri import LinearTriInterpolator, CubicTriInterpolator
 from scipy.interpolate import LinearNDInterpolator, NearestNDInterpolator
 from scipy.interpolate import CloughTocher2DInterpolator
 from scipy.stats import multinomial
+from scipy.special import logsumexp
+
 
 # import time  # for profiling
 
@@ -801,21 +803,20 @@ class RapidPE_result:
                     self.x2[mask]) * gaussian_sigma_to_grid_size_ratio
                 cov[gl] = np.diag([sigma_x1**2, sigma_x2**2])
 
-            # Compute likelihood at each grid point
-            likelihood = np.exp(self.marg_log_likelihood)
-            sum_likelihood = np.sum(likelihood)
+            # Compute normalized relative likelihood at each grid point
+            prob = np.exp(self.marg_log_likelihood
+                          - logsumexp(self.marg_log_likelihood))
 
             # Compute number of samples for each grid point
-            N_multinomial = multinomial(N*20, likelihood/sum_likelihood)
+            N_multinomial = multinomial(N*20, prob)
             N_per_grid_point = N_multinomial.rvs(1)[0]
 
             # Generate samples
             samples = np.zeros([0, 2])
-            for x1, x2, lh, gl, n in zip(self.x1,
-                                         self.x2,
-                                         likelihood,
-                                         self.iteration,
-                                         N_per_grid_point):
+            for x1, x2, gl, n in zip(self.x1,
+                                     self.x2,
+                                     self.iteration,
+                                     N_per_grid_point):
                 samples = np.concatenate([
                     samples,
                     np.random.multivariate_normal([x1, x2], cov[gl], n)
