@@ -766,7 +766,7 @@ class RapidPE_result:
 
     def generate_posterior_samples(self,
                                    N=5000,
-                                   method="gaussian",
+                                   method="gaussian-resample",
                                    seed=None,
                                    gaussian_sigma_to_grid_size_ratio=1.0,
                                    em_bright_compatible=True):
@@ -796,7 +796,7 @@ class RapidPE_result:
 
         rng = np.random.default_rng(seed)
 
-        if method == "gaussian":
+        if method == "gaussian" or method == "gaussian-resample":
             grid_levels = np.unique(self.iteration)
             cov = {}
             for gl in grid_levels:
@@ -810,6 +810,13 @@ class RapidPE_result:
             # Compute normalized relative likelihood at each grid point
             prob = np.exp(self.marg_log_likelihood
                           - logsumexp(self.marg_log_likelihood))
+
+            if method == "gaussian":
+                x = Mass_Spin.from_m1m2(self.mass_1,
+                                        self.mass_2,
+                                        grid_coordinates=self.grid_coordinates)
+                prob *= x.jacobian_m1m2_by_x1x2
+                prob /= np.sum(prob)
 
             # Compute number of samples for each grid point
             N_per_grid_point = rng.multinomial(N*20, pvals=prob)
@@ -858,8 +865,11 @@ class RapidPE_result:
             # Re-weight the samples according to the Jacobian such that
             # it has a uniform prior in m1-m2 space
             # Reference: https://dcc.ligo.org/LIGO-T2300198
-            weight = x.jacobian_m1m2_by_x1x2[mask_m1m2]
-            weight /= np.sum(weight)
+            if method == "gaussian-resample":
+                weight = x.jacobian_m1m2_by_x1x2[mask_m1m2]
+                weight /= np.sum(weight)
+            else:
+                weight = None
 
             m = {"mass_1": x.mass_1[mask_m1m2],
                  "mass_2": x.mass_2[mask_m1m2]}
