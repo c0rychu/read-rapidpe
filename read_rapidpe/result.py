@@ -147,7 +147,7 @@ class RapidPE_result:
                 return ["chirp_mass", "symmetric_mass_ratio"]
             else:
                 raise NotImplementedError("distance_coordinates not supported")
-        elif iparam_search == "[mass2,mass2,spin1z,spin2z]":
+        elif iparam_search == "[mass1,mass2,spin1z,spin2z]":
             if distant_coord == "mchirp_q":
                 return ["chirp_mass", "mass_ratio", "chi_eff", "chi_a"]
             elif distant_coord == "mchirp_eta":
@@ -934,8 +934,12 @@ class RapidPE_result:
     def plot_corner(self,
                     columns=["mass_1", "mass_2"],
                     title=None,
+                    true_params=True,
+                    figsize=None,
                     **kwargs):
         from .plot import plot_corner
+        from matplotlib.lines import Line2D
+        import corner
 
         samples = {}
         for col in columns:
@@ -945,6 +949,59 @@ class RapidPE_result:
                 pass
 
         fig = plot_corner(samples, **kwargs)
+
+        if true_params:
+            legend = False
+            legend_elements = []
+            inj = False
+            pipe = False
+
+            x_inj = []
+            for col in columns:
+                try:
+                    x_inj.append(self.injection_info[col])
+                    legend = True
+                    inj = True
+                except (KeyError, AttributeError):
+                    x_inj.append(None)
+            if inj:
+                corner.overplot_lines(fig, x_inj, color="r")
+                corner.overplot_points(fig,
+                                       [x_inj],
+                                       marker="*",
+                                       markersize=10,
+                                       color="r",
+                                       label="Injection")
+                legend_elements.append(
+                    Line2D([0], [0], marker="*", color="r", markersize=10, label="Injection")  # noqa: E501
+                )
+
+            x_pipe = []
+            for col in columns:
+                try:
+                    x_pipe.append(self.event_info["intrinsic_param"][col])
+                    legend = True
+                    pipe = True
+                except (KeyError, AttributeError):
+                    x_pipe.append(None)
+            if pipe:
+                corner.overplot_lines(fig, x_pipe, color="b")
+                corner.overplot_points(fig,
+                                       [x_pipe],
+                                       marker="o",
+                                       color="b",
+                                       label="Search Pipeline")
+                legend_elements.append(
+                    Line2D([0], [0], marker="o", color="b", label="Search Pipeline")  # noqa: E501
+                )
+
+            if legend:
+                fig.legend(handles=legend_elements,
+                           bbox_to_anchor=(0.93, 0.85))
+
+        if figsize is not None:
+            fig.set_figwidth(figsize[0])
+            fig.set_figheight(figsize[1])
 
         if title is not None:
             fig.suptitle(title, y=1.05)
