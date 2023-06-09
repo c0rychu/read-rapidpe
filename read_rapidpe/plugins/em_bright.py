@@ -133,13 +133,13 @@ def source_classification_samples(samples, threshold=3.0,
 
     try:
         mass_1, mass_2 = samples['mass_1_source'], samples['mass_2_source']
-    except ValueError:
+    except (ValueError, KeyError):
         lum_dist = samples['luminosity_distance']
         redshifts = get_redshifts(lum_dist)
         try:
             mass_1, mass_2 = samples['mass_1'], samples['mass_2']
             mass_1, mass_2 = mass_1/(1 + redshifts), mass_2/(1 + redshifts)
-        except ValueError:
+        except (ValueError, KeyError):
             chirp_mass, mass_ratio = samples['chirp_mass'], samples['mass_ratio']  # noqa:E501
             chirp_mass = chirp_mass/(1 + redshifts)
             mass_1 = chirp_mass * (1 + mass_ratio)**(1/5) * (mass_ratio)**(-3/5)  # noqa:E501
@@ -148,11 +148,11 @@ def source_classification_samples(samples, threshold=3.0,
     try:
         a_1 = samples["spin_1z"]
         a_2 = samples["spin_2z"]
-    except ValueError:
+    except (ValueError, KeyError):
         try:
             a_1 = samples['a_1'] * np.cos(samples['tilt_1'])
             a_2 = samples['a_2'] * np.cos(samples['tilt_2'])
-        except ValueError:
+        except (ValueError, KeyError):
             a_1, a_2 = np.zeros(len(mass_1)), np.zeros(len(mass_2))
 
     if num_eos_draws:
@@ -165,7 +165,8 @@ def source_classification_samples(samples, threshold=3.0,
         subset_draws = ALL_EOS_DRAWS[rand_subset]
         M, R = subset_draws['M'], subset_draws['R']
         max_masses = np.max(M, axis=1)
-        f_M = [interp1d(m, r, bounds_error=False) for m, r in zip(M, R)]
+        f_M = [interp1d(m, r*1000.0, bounds_error=False) for m, r in zip(M, R)]
+        # r*1000.0 is a temprary fix to convert NS radius from km to m
         for mass_radius_relation, max_mass in zip(f_M, max_masses):
             M_rem = computeDiskMass.computeDiskMass(m1, m2, a1, a2, eosname=mass_radius_relation, max_mass=max_mass)  # noqa:E501
             prediction_nss.append(np.mean(m2 <= max_mass))
