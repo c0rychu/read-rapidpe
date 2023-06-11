@@ -1,6 +1,13 @@
 Read Rapid-PE
 ===
 
+
+[![PyPI Version](https://img.shields.io/pypi/v/read-rapidpe?label=PyPI%20version)](
+https://pypi.org/project/read-rapidpe/)
+[![PyPI Downloads](https://img.shields.io/pypi/dm/read-rapidpe?label=PyPI%20downloads)](
+https://pypi.org/project/read-rapidpe/)
+
+
 This is a package to read Rapid-PE outputs.
 
 # Install
