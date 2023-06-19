@@ -2,7 +2,7 @@
 A middleware for accessing em-bright from read-rapidpe.
 
 Several functions are copied/modified from ligo.em_bright:
-    https://git.ligo.org/emfollow/em-properties/em-bright/-/blob/main/ligo/em_bright/em_bright.py
+    https://git.ligo.org/emfollow/em-properties/em-bright/-/blob/v1.1.4.post2/ligo/em_bright/em_bright.py
 """
 
 
@@ -52,7 +52,8 @@ def get_redshifts(distances, N=10000):
     return redshifts
 
 
-def em_bright(result, threshold=3.0, num_eos_draws=1000, eos_seed=None):
+def em_bright(result, threshold=3.0, num_eos_draws=1000, eos_seed=None,
+              eosname=None):
     """
     Compute ``HasNS``, ``HasRemnant``, and ``HasMassGap`` probabilities
     from read-rapidpe result.
@@ -83,7 +84,8 @@ def em_bright(result, threshold=3.0, num_eos_draws=1000, eos_seed=None):
         source_classification_samples(samples=result.posterior_samples,
                                       threshold=threshold,
                                       num_eos_draws=num_eos_draws,
-                                      eos_seed=eos_seed)
+                                      eos_seed=eos_seed,
+                                      eosname=eosname)
     return ({
         'HasNS': has_ns,
         'HasRemnant': has_remnant,
@@ -92,7 +94,37 @@ def em_bright(result, threshold=3.0, num_eos_draws=1000, eos_seed=None):
 
 
 def source_classification_pe(posterior_samples_file, threshold=3.0,
-                             num_eos_draws=None, eos_seed=None):
+                             num_eos_draws=10000, eos_seed=None,
+                             eosname=None):
+    """
+    Compute ``HasNS``, ``HasRemnant``, and ``HasMassGap`` probabilities
+    from posterior samples.
+
+    Parameters
+    ----------
+    posterior_samples_file : str
+        Posterior samples file
+
+    threshold : float, optional
+        Maximum neutron star mass for `HasNS` computation
+
+    num_eos_draws : int
+        providing an int here runs eos marginalization
+        with the value determining how many eos's to draw
+
+    eos_seed : int
+        seed for random eos draws
+
+    eosname : str
+        Equation of state name, inferred from ``lalsimulation``. Supersedes
+        eos marginalization method when provided.
+
+    Returns
+    -------
+    tuple
+        (HasNS, HasRemnant, HasMassGap) predicted values.
+
+    """
 
     with h5py.File(posterior_samples_file, 'r') as data:
         samples = data['posterior_samples'][()]
@@ -100,11 +132,13 @@ def source_classification_pe(posterior_samples_file, threshold=3.0,
     return source_classification_samples(samples=samples,
                                          threshold=threshold,
                                          num_eos_draws=num_eos_draws,
-                                         eos_seed=eos_seed)
+                                         eos_seed=eos_seed,
+                                         eosname=eosname)
 
 
 def source_classification_samples(samples, threshold=3.0,
-                                  num_eos_draws=None, eos_seed=None):
+                                  num_eos_draws=10000, eos_seed=None,
+                                  eosname=None):
     """
     Compute ``HasNS``, ``HasRemnant``, and ``HasMassGap`` probabilities
     from posterior samples.
@@ -123,6 +157,10 @@ def source_classification_samples(samples, threshold=3.0,
 
     eos_seed : int
         seed for random eos draws
+
+    eosname : str
+        Equation of state name, inferred from ``lalsimulation``. Supersedes
+        eos marginalization method when provided.
 
     Returns
     -------
@@ -155,30 +193,30 @@ def source_classification_samples(samples, threshold=3.0,
         except (ValueError, KeyError):
             a_1, a_2 = np.zeros(len(mass_1)), np.zeros(len(mass_2))
 
-    if num_eos_draws:
+    if eosname:
+        M_rem = computeDiskMass.computeDiskMass(mass_1, mass_2, a_1, a_2,
+                                                eosname=eosname)
+        prediction_ns = np.sum(mass_2 <= threshold)/len(mass_2)
+        prediction_em = np.sum(M_rem > 0)/len(M_rem)
+
+    else:
         np.random.seed(eos_seed)
         prediction_nss, prediction_ems = [], []
-
-        m1, m2, a1, a2 = mass_1, mass_2, a_1, a_2
+        # EoS draws from: 10.5281/zenodo.6502467
         rand_subset = np.random.choice(
-            len(ALL_EOS_DRAWS), num_eos_draws if num_eos_draws < len(ALL_EOS_DRAWS) else len(ALL_EOS_DRAWS))  # noqa:E501
+            len(ALL_EOS_DRAWS), num_eos_draws if num_eos_draws < len(ALL_EOS_DRAWS) else len(ALL_EOS_DRAWS), replace=False)  # noqa:E501
         subset_draws = ALL_EOS_DRAWS[rand_subset]
-        M, R = subset_draws['M'], subset_draws['R']
+        # convert radius to m from km
+        M, R = subset_draws['M'], 1000*subset_draws['R']
         max_masses = np.max(M, axis=1)
-        f_M = [interp1d(m, r*1000.0, bounds_error=False) for m, r in zip(M, R)]
-        # r*1000.0 is a temprary fix to convert NS radius from km to m
+        f_M = [interp1d(m, r, bounds_error=False) for m, r in zip(M, R)]
         for mass_radius_relation, max_mass in zip(f_M, max_masses):
-            M_rem = computeDiskMass.computeDiskMass(m1, m2, a1, a2, eosname=mass_radius_relation, max_mass=max_mass)  # noqa:E501
-            prediction_nss.append(np.mean(m2 <= max_mass))
+            M_rem = computeDiskMass.computeDiskMass(mass_1, mass_2, a_1, a_2, eosname=mass_radius_relation, max_mass=max_mass)  # noqa:E501
+            prediction_nss.append(np.mean(mass_2 <= max_mass))
             prediction_ems.append(np.mean(M_rem > 0))
 
         prediction_ns = np.mean(prediction_nss)
         prediction_em = np.mean(prediction_ems)
-
-    else:
-        M_rem = computeDiskMass.computeDiskMass(mass_1, mass_2, a_1, a_2)
-        prediction_ns = np.sum(mass_2 <= threshold)/len(mass_2)
-        prediction_em = np.sum(M_rem > 0)/len(M_rem)
 
     prediction_mg = (mass_1 <= 5) & (mass_1 >= 3)
     prediction_mg += (mass_2 <= 5) & (mass_2 >= 3)
