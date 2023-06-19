@@ -52,7 +52,7 @@ def get_redshifts(distances, N=10000):
     return redshifts
 
 
-def em_bright(result, threshold=3.0, num_eos_draws=1000, eos_seed=None,
+def em_bright(result, threshold=3.0, num_eos_draws=2000, eos_seed=None,
               eosname=None):
     """
     Compute ``HasNS``, ``HasRemnant``, and ``HasMassGap`` probabilities
