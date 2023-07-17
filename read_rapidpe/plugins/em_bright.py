@@ -9,47 +9,10 @@ Several functions are copied/modified from ligo.em_bright:
 import h5py
 import numpy as np
 from scipy.interpolate import interp1d
-from astropy import cosmology, units as u
 
 from ligo.em_bright import computeDiskMass, utils
+from ligo.em_bright.em_bright import get_redshifts
 ALL_EOS_DRAWS = utils.load_eos_posterior()
-
-
-def get_redshifts(distances, N=10000):
-    """
-    Compute redshift using the Planck15 cosmology.
-
-    Parameters
-    ----------
-    distances: float or numpy.ndarray
-              distance(s) in Mpc
-
-    N : int, optional
-      Number of steps for the computation of the interpolation function
-
-    Example
-    -------
-    >>> distances = np.linspace(10, 100, 10)
-    >>> em_bright.get_redshifts(distances)
-    array([0.00225566, 0.00450357, 0.00674384, 0.00897655,
-           0.01120181, 0.0134197 , 0.01563032, 0.01783375
-           0.02003009, 0.02221941])
-
-    Notes
-    -----
-    This function accepts HDF5 posterior samples file and computes
-    redshift by interpolating the distance-redshift relation.
-    """
-    function = cosmology.Planck15.luminosity_distance
-    min_dist = np.min(distances)
-    max_dist = np.max(distances)
-    z_min = cosmology.z_at_value(func=function, fval=min_dist*u.Mpc)
-    z_max = cosmology.z_at_value(func=function, fval=max_dist*u.Mpc)
-    z_steps = np.linspace(z_min - (0.1*z_min), z_max + (0.1*z_max), N)
-    lum_dists = cosmology.Planck15.luminosity_distance(z_steps)
-    s = interp1d(lum_dists, z_steps)
-    redshifts = s(distances)
-    return redshifts
 
 
 def em_bright(result, threshold=3.0, num_eos_draws=2000, eos_seed=None,
