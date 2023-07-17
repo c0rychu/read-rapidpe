@@ -860,7 +860,7 @@ class RapidPE_result:
 
             # An ad-hoc cut on the mass_1 and mass_2
             mask_m1m2 = x.mass_1 < 500
-            # mask_m1m2 &= x.mass_2 > 0.1
+            mask_m1m2 &= x.mass_2 > 0.1
 
             # Re-weight the samples according to the Jacobian such that
             # it has a uniform prior in m1-m2 space
